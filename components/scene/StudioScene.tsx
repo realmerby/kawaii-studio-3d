@@ -9,31 +9,31 @@ import { ParticleEffects } from './ParticleEffects';
 export function StudioScene() {
   return (
     <>
-      {/* Anime Studio Lighting Setup */}
-      <ambientLight intensity={1.25} color="#FFF0F5" />
+      {/* Anime Studio Lighting Setup (Warm, Soft, Cel-style) */}
+      <ambientLight intensity={1.35} color="#FFF5F8" />
 
-      {/* Warm Key Light */}
+      {/* Warm Front Key Light */}
       <directionalLight
-        position={[3, 5, 4]}
-        intensity={1.8}
-        color="#FFF9F0"
+        position={[2.5, 4.5, 4.5]}
+        intensity={2.0}
+        color="#FFFBF5"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0001}
       />
 
-      {/* Pastel Fill Light */}
-      <directionalLight position={[-3, 2, 3]} intensity={1.1} color="#FCE7F3" />
+      {/* Pastel Soft Fill Light */}
+      <directionalLight position={[-3, 2.5, 3]} intensity={1.2} color="#FCE7F3" />
 
-      {/* Anime Rim Light (Backlight for shiny hair and edges) */}
-      <directionalLight position={[0, 4, -4]} intensity={1.6} color="#FF80AB" />
+      {/* Glowing Anime Rim Backlight (Provides luminous hair highlights & edge separation) */}
+      <directionalLight position={[0, 4.5, -4]} intensity={2.2} color="#FF94B8" />
 
-      {/* Low Ground Fill */}
-      <directionalLight position={[0, -2, 2]} intensity={0.4} color="#FFE4E6" />
+      {/* Low Ground Reflection */}
+      <directionalLight position={[0, -2, 2]} intensity={0.5} color="#FFE4E8" />
 
-      {/* 3D Curved Pastel Backdrop Cyclorama */}
+      {/* 3D Soft Pastel Backdrop */}
       <mesh position={[0, 0, -3.5]} rotation={[0, 0, 0]}>
-        <planeGeometry args={[16, 12]} />
+        <planeGeometry args={[18, 14]} />
         <meshBasicMaterial color="#FFE4EC" side={THREE.DoubleSide} />
       </mesh>
 

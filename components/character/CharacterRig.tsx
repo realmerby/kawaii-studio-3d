@@ -21,7 +21,7 @@ export function CharacterRig() {
     animationSpeed,
   } = useGameStore();
 
-  // Rig Limb Hierarchy References
+  // Rig Hierarchy References
   const rootGroupRef = useRef<THREE.Group>(null);
   const hipsRef = useRef<THREE.Group>(null);
   const torsoRef = useRef<THREE.Group>(null);
@@ -46,7 +46,7 @@ export function CharacterRig() {
   useFrame(({ clock }, delta) => {
     const pose = getPoseById(poseId);
     const t = clock.getElapsedTime() * animationSpeed;
-    const lerpFactor = 1 - Math.exp(-8 * delta); // Smooth 300-500ms easing transition
+    const lerpFactor = 1 - Math.exp(-8 * delta); // Smooth 300-500ms easing
 
     const idleHead = idleAnimation && pose.idleWiggle
       ? Math.sin(t * (pose.idleWiggle.speed || 1.5)) * (pose.idleWiggle.headAmplitude || 0.02)
@@ -55,10 +55,10 @@ export function CharacterRig() {
       ? Math.cos(t * (pose.idleWiggle.speed || 1.5)) * (pose.idleWiggle.hipAmplitude || 0.02)
       : 0;
     const breatheChest = idleAnimation
-      ? Math.sin(t * 2.2) * (pose.idleWiggle?.breathingScale || 0.02)
+      ? Math.sin(t * 2.2) * (pose.idleWiggle?.breathingScale || 0.018)
       : 0;
 
-    // 0. Body Position Offset (Vertical and Lateral for sitting / leaning poses)
+    // 0. Body Position Offset
     if (rootGroupRef.current) {
       const targetOffsetY = 0.45 + (pose.transforms.bodyOffset?.[1] || 0);
       const targetOffsetX = pose.transforms.bodyOffset?.[0] || 0;
@@ -76,14 +76,14 @@ export function CharacterRig() {
       hipsRef.current.rotation.z = THREE.MathUtils.lerp(hipsRef.current.rotation.z, pose.transforms.hips[2], lerpFactor);
     }
 
-    // 2. Torso & Breathing
+    // 2. Torso & Chest
     if (torsoRef.current) {
       torsoRef.current.rotation.x = THREE.MathUtils.lerp(torsoRef.current.rotation.x, pose.transforms.torso[0] + breatheChest, lerpFactor);
       torsoRef.current.rotation.y = THREE.MathUtils.lerp(torsoRef.current.rotation.y, pose.transforms.torso[1], lerpFactor);
       torsoRef.current.rotation.z = THREE.MathUtils.lerp(torsoRef.current.rotation.z, pose.transforms.torso[2], lerpFactor);
     }
 
-    // 3. Head
+    // 3. Head & Neck
     if (headRef.current) {
       headRef.current.rotation.x = THREE.MathUtils.lerp(headRef.current.rotation.x, pose.transforms.head[0], lerpFactor);
       headRef.current.rotation.y = THREE.MathUtils.lerp(headRef.current.rotation.y, pose.transforms.head[1] + idleHead, lerpFactor);
@@ -167,13 +167,13 @@ export function CharacterRig() {
       {/* 1. PELVIS / HIPS ROOT                                        */}
       {/* ============================================================ */}
       <group ref={hipsRef} position={[0, 0, 0]}>
-        {/* Base Underwear / Pelvis */}
+        {/* Soft Contoured Pelvis / Underwear */}
         <mesh position={[0, 0, 0]}>
-          <cylinderGeometry args={[0.22, 0.2, 0.22, 20]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.4} />
+          <cylinderGeometry args={[0.2, 0.18, 0.2, 24]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.35} />
         </mesh>
 
-        {/* Bottom Item (Skirt / Shorts) */}
+        {/* Bottom Clothing Item (Skirt / Shorts) */}
         {!equipped.dress && (
           <ClothingRenderer
             category="bottom"
@@ -183,7 +183,7 @@ export function CharacterRig() {
           />
         )}
 
-        {/* Dress Item (If equipped, replaces top & bottom) */}
+        {/* Dress Item (If equipped) */}
         {equipped.dress && (
           <ClothingRenderer
             category="dress"
@@ -194,12 +194,12 @@ export function CharacterRig() {
         )}
 
         {/* ============================================================ */}
-        {/* 2. TORSO / CHEST                                             */}
+        {/* 2. TORSO / CHEST (Slender Feminine Anime Curve)              */}
         {/* ============================================================ */}
-        <group ref={torsoRef} position={[0, 0.2, 0]}>
-          {/* Base Torso Body */}
-          <mesh position={[0, 0.1, 0]}>
-            <cylinderGeometry args={[0.23, 0.2, 0.32, 20]} />
+        <group ref={torsoRef} position={[0, 0.18, 0]}>
+          {/* Base Slender Anime Torso */}
+          <mesh position={[0, 0.08, 0]}>
+            <cylinderGeometry args={[0.22, 0.19, 0.28, 24]} />
             <meshStandardMaterial color={skinTone} roughness={0.35} />
           </mesh>
 
@@ -223,10 +223,10 @@ export function CharacterRig() {
           {/* ============================================================ */}
           {/* 3. NECK & HEAD                                               */}
           {/* ============================================================ */}
-          <group position={[0, 0.32, 0]}>
+          <group position={[0, 0.28, 0]}>
             {/* Graceful Anime Neck */}
             <mesh position={[0, 0, 0]}>
-              <cylinderGeometry args={[0.08, 0.09, 0.16, 16]} />
+              <cylinderGeometry args={[0.075, 0.085, 0.15, 20]} />
               <meshStandardMaterial color={skinTone} roughness={0.35} />
             </mesh>
 
@@ -237,30 +237,30 @@ export function CharacterRig() {
               itemColors={itemColors}
             />
 
-            {/* Anime Head Group */}
-            <group ref={headRef} position={[0, 0.24, 0]}>
-              {/* Stylized Anime Head Mesh */}
-              <mesh position={[0, 0, 0]}>
+            {/* Stylized Anime Head Group */}
+            <group ref={headRef} position={[0, 0.22, 0]}>
+              {/* Cute Chibi Anime Head Base */}
+              <mesh position={[0, 0.02, 0]}>
                 <sphereGeometry args={[0.38, 32, 28]} />
                 <meshStandardMaterial color={skinTone} roughness={0.32} />
               </mesh>
-              {/* Cute Tapered Chin / Jaw Definition */}
-              <mesh position={[0, -0.16, 0.12]} rotation={[0.4, 0, 0]}>
-                <coneGeometry args={[0.18, 0.26, 16]} />
+              {/* Soft Cheeks / Jaw Contour */}
+              <mesh position={[0, -0.12, 0.12]} rotation={[0.35, 0, 0]}>
+                <coneGeometry args={[0.19, 0.22, 20]} />
                 <meshStandardMaterial color={skinTone} roughness={0.32} />
               </mesh>
 
-              {/* Anime Face Features (Eyes, Blink, Blush, Smile, Earrings) */}
+              {/* Anime Face Features (Expressive Eyes, Lashes, Blush, Lips) */}
               <AnimeFace colors={colors} faceFeatures={faceFeatures} />
 
-              {/* Modular 3D Anime Hair */}
+              {/* Modular 3D Layered Anime Hair */}
               <HairRenderer
                 hairId={equipped.hair}
                 colors={colors}
                 itemColor={equipped.hair ? itemColors[equipped.hair] : undefined}
               />
 
-              {/* Headwear & Hair Accessories (Kitty ears, Bow, Halo, Beret) */}
+              {/* Headwear Accessories (Cat Ears, Bow, Halo, Beret) */}
               <AccessoriesRenderer
                 category="headAccessory"
                 itemId={equipped.headAccessory}
@@ -270,33 +270,45 @@ export function CharacterRig() {
           </group>
 
           {/* ============================================================ */}
-          {/* 4. LEFT ARM HIERARCHY                                        */}
+          {/* 4. LEFT ARM HIERARCHY (Slender & Smooth Anime Limb)          */}
           {/* ============================================================ */}
-          <group position={[-0.26, 0.2, 0]}>
-            {/* Shoulder Ball */}
+          <group position={[-0.24, 0.18, 0]}>
+            {/* Soft Shoulder Cap */}
             <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[0.065, 12, 12]} />
+              <sphereGeometry args={[0.055, 16, 16]} />
               <meshStandardMaterial color={skinTone} roughness={0.35} />
             </mesh>
 
             <group ref={leftUpperArmRef} position={[0, 0, 0]}>
-              {/* Upper Arm Mesh */}
-              <mesh position={[0, -0.14, 0]}>
-                <cylinderGeometry args={[0.055, 0.05, 0.26, 14]} />
+              {/* Upper Arm */}
+              <mesh position={[0, -0.13, 0]}>
+                <cylinderGeometry args={[0.048, 0.042, 0.24, 16]} />
                 <meshStandardMaterial color={skinTone} roughness={0.35} />
               </mesh>
 
               {/* Left Elbow & Forearm */}
-              <group ref={leftForearmRef} position={[0, -0.27, 0]}>
-                <mesh position={[0, -0.12, 0]}>
-                  <cylinderGeometry args={[0.048, 0.042, 0.24, 14]} />
+              <group ref={leftForearmRef} position={[0, -0.24, 0]}>
+                {/* Forearm */}
+                <mesh position={[0, -0.11, 0]}>
+                  <cylinderGeometry args={[0.042, 0.036, 0.22, 16]} />
                   <meshStandardMaterial color={skinTone} roughness={0.35} />
                 </mesh>
 
-                {/* Left Hand & Delicate Anime Fingers */}
-                <group ref={leftHandRef} position={[0, -0.25, 0]}>
-                  <mesh position={[0, -0.04, 0]}>
-                    <boxGeometry args={[0.06, 0.08, 0.035]} />
+                {/* Left Hand (Delicate posed anime hand) */}
+                <group ref={leftHandRef} position={[0, -0.22, 0]}>
+                  {/* Palm */}
+                  <mesh position={[0, -0.035, 0]}>
+                    <sphereGeometry args={[0.038, 12, 12]} />
+                    <meshStandardMaterial color={skinTone} roughness={0.35} />
+                  </mesh>
+                  {/* Posed Fingers (Soft curved anime fingers) */}
+                  <mesh position={[0, -0.065, 0.008]} rotation={[0.2, 0, 0]}>
+                    <cylinderGeometry args={[0.024, 0.018, 0.055, 10]} />
+                    <meshStandardMaterial color={skinTone} roughness={0.35} />
+                  </mesh>
+                  {/* Thumb */}
+                  <mesh position={[0.024, -0.03, 0.015]} rotation={[0.4, 0, -0.5]}>
+                    <cylinderGeometry args={[0.01, 0.008, 0.03, 8]} />
                     <meshStandardMaterial color={skinTone} roughness={0.35} />
                   </mesh>
                 </group>
@@ -305,42 +317,44 @@ export function CharacterRig() {
           </group>
 
           {/* ============================================================ */}
-          {/* 5. RIGHT ARM HIERARCHY                                       */}
+          {/* 5. RIGHT ARM HIERARCHY (Slender & Smooth Anime Limb)         */}
           {/* ============================================================ */}
-          <group position={[0.26, 0.2, 0]}>
-            {/* Shoulder Ball */}
+          <group position={[0.24, 0.18, 0]}>
+            {/* Soft Shoulder Cap */}
             <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[0.065, 12, 12]} />
+              <sphereGeometry args={[0.055, 16, 16]} />
               <meshStandardMaterial color={skinTone} roughness={0.35} />
             </mesh>
 
             <group ref={rightUpperArmRef} position={[0, 0, 0]}>
-              {/* Upper Arm Mesh */}
-              <mesh position={[0, -0.14, 0]}>
-                <cylinderGeometry args={[0.055, 0.05, 0.26, 14]} />
+              {/* Upper Arm */}
+              <mesh position={[0, -0.13, 0]}>
+                <cylinderGeometry args={[0.048, 0.042, 0.24, 16]} />
                 <meshStandardMaterial color={skinTone} roughness={0.35} />
               </mesh>
 
               {/* Right Elbow & Forearm */}
-              <group ref={rightForearmRef} position={[0, -0.27, 0]}>
-                <mesh position={[0, -0.12, 0]}>
-                  <cylinderGeometry args={[0.048, 0.042, 0.24, 14]} />
+              <group ref={rightForearmRef} position={[0, -0.24, 0]}>
+                <mesh position={[0, -0.11, 0]}>
+                  <cylinderGeometry args={[0.042, 0.036, 0.22, 16]} />
                   <meshStandardMaterial color={skinTone} roughness={0.35} />
                 </mesh>
 
-                {/* Right Hand (Peace sign / wave) */}
-                <group ref={rightHandRef} position={[0, -0.25, 0]}>
-                  <mesh position={[0, -0.04, 0]}>
-                    <boxGeometry args={[0.06, 0.08, 0.035]} />
+                {/* Right Hand */}
+                <group ref={rightHandRef} position={[0, -0.22, 0]}>
+                  {/* Palm */}
+                  <mesh position={[0, -0.035, 0]}>
+                    <sphereGeometry args={[0.038, 12, 12]} />
                     <meshStandardMaterial color={skinTone} roughness={0.35} />
                   </mesh>
-                  {/* Peace V Fingers */}
-                  <mesh position={[-0.015, -0.09, 0]} rotation={[0, 0, 0.15]}>
-                    <cylinderGeometry args={[0.01, 0.008, 0.06, 8]} />
+                  {/* Posed Fingers */}
+                  <mesh position={[0, -0.065, 0.008]} rotation={[0.2, 0, 0]}>
+                    <cylinderGeometry args={[0.024, 0.018, 0.055, 10]} />
                     <meshStandardMaterial color={skinTone} roughness={0.35} />
                   </mesh>
-                  <mesh position={[0.015, -0.09, 0]} rotation={[0, 0, -0.15]}>
-                    <cylinderGeometry args={[0.01, 0.008, 0.06, 8]} />
+                  {/* Thumb */}
+                  <mesh position={[-0.024, -0.03, 0.015]} rotation={[0.4, 0, 0.5]}>
+                    <cylinderGeometry args={[0.01, 0.008, 0.03, 8]} />
                     <meshStandardMaterial color={skinTone} roughness={0.35} />
                   </mesh>
                 </group>
@@ -350,28 +364,28 @@ export function CharacterRig() {
         </group>
 
         {/* ============================================================ */}
-        {/* 6. LEFT LEG HIERARCHY                                        */}
+        {/* 6. LEFT LEG HIERARCHY (Slender & Smooth Anime Thigh & Calf)  */}
         {/* ============================================================ */}
-        <group position={[-0.14, -0.1, 0]}>
+        <group position={[-0.13, -0.08, 0]}>
           <group ref={leftUpperLegRef} position={[0, 0, 0]}>
-            {/* Thigh */}
-            <mesh position={[0, -0.22, 0]}>
-              <cylinderGeometry args={[0.095, 0.078, 0.44, 16]} />
+            {/* Smooth Thigh */}
+            <mesh position={[0, -0.2, 0]}>
+              <cylinderGeometry args={[0.085, 0.07, 0.4, 20]} />
               <meshStandardMaterial color={skinTone} roughness={0.35} />
             </mesh>
 
             {/* Left Knee & Lower Leg */}
-            <group ref={leftLowerLegRef} position={[0, -0.44, 0]}>
-              {/* Calf */}
-              <mesh position={[0, -0.24, 0]}>
-                <cylinderGeometry args={[0.078, 0.065, 0.48, 16]} />
+            <group ref={leftLowerLegRef} position={[0, -0.4, 0]}>
+              {/* Smooth Calf */}
+              <mesh position={[0, -0.22, 0]}>
+                <cylinderGeometry args={[0.07, 0.058, 0.44, 20]} />
                 <meshStandardMaterial color={skinTone} roughness={0.35} />
               </mesh>
 
               {/* Left Ankle & Foot */}
-              <group ref={leftFootRef} position={[0, -0.48, 0.04]}>
-                <mesh position={[0, -0.03, 0]}>
-                  <boxGeometry args={[0.09, 0.05, 0.16]} />
+              <group ref={leftFootRef} position={[0, -0.44, 0.03]}>
+                <mesh position={[0, -0.02, 0]}>
+                  <boxGeometry args={[0.08, 0.045, 0.14]} />
                   <meshStandardMaterial color={skinTone} roughness={0.35} />
                 </mesh>
               </group>
@@ -380,28 +394,28 @@ export function CharacterRig() {
         </group>
 
         {/* ============================================================ */}
-        {/* 7. RIGHT LEG HIERARCHY                                       */}
+        {/* 7. RIGHT LEG HIERARCHY (Slender & Smooth Anime Thigh & Calf) */}
         {/* ============================================================ */}
-        <group position={[0.14, -0.1, 0]}>
+        <group position={[0.13, -0.08, 0]}>
           <group ref={rightUpperLegRef} position={[0, 0, 0]}>
-            {/* Thigh */}
-            <mesh position={[0, -0.22, 0]}>
-              <cylinderGeometry args={[0.095, 0.078, 0.44, 16]} />
+            {/* Smooth Thigh */}
+            <mesh position={[0, -0.2, 0]}>
+              <cylinderGeometry args={[0.085, 0.07, 0.4, 20]} />
               <meshStandardMaterial color={skinTone} roughness={0.35} />
             </mesh>
 
             {/* Right Knee & Lower Leg */}
-            <group ref={rightLowerLegRef} position={[0, -0.44, 0]}>
-              {/* Calf */}
-              <mesh position={[0, -0.24, 0]}>
-                <cylinderGeometry args={[0.078, 0.065, 0.48, 16]} />
+            <group ref={rightLowerLegRef} position={[0, -0.4, 0]}>
+              {/* Smooth Calf */}
+              <mesh position={[0, -0.22, 0]}>
+                <cylinderGeometry args={[0.07, 0.058, 0.44, 20]} />
                 <meshStandardMaterial color={skinTone} roughness={0.35} />
               </mesh>
 
               {/* Right Ankle & Foot */}
-              <group ref={rightFootRef} position={[0, -0.48, 0.04]}>
-                <mesh position={[0, -0.03, 0]}>
-                  <boxGeometry args={[0.09, 0.05, 0.16]} />
+              <group ref={rightFootRef} position={[0, -0.44, 0.03]}>
+                <mesh position={[0, -0.02, 0]}>
+                  <boxGeometry args={[0.08, 0.045, 0.14]} />
                   <meshStandardMaterial color={skinTone} roughness={0.35} />
                 </mesh>
               </group>

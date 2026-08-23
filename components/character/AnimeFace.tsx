@@ -20,8 +20,8 @@ export function AnimeFace({
     earrings: 'heart_studs',
   },
 }: AnimeFaceProps) {
-  const leftEyeRef = useRef<THREE.Group>(null);
-  const rightEyeRef = useRef<THREE.Group>(null);
+  const leftEyeGroupRef = useRef<THREE.Group>(null);
+  const rightEyeGroupRef = useRef<THREE.Group>(null);
   const blinkTimerRef = useRef(0);
   const isBlinkingRef = useRef(false);
   const blinkProgressRef = useRef(0);
@@ -29,9 +29,9 @@ export function AnimeFace({
   useFrame((_, delta) => {
     blinkTimerRef.current += delta;
 
-    // Trigger blink every ~3.5 to 5 seconds
-    if (!isBlinkingRef.current && blinkTimerRef.current > 3.8) {
-      if (Math.random() > 0.25) {
+    // Natural anime blink cycle
+    if (!isBlinkingRef.current && blinkTimerRef.current > 3.5) {
+      if (Math.random() > 0.3) {
         isBlinkingRef.current = true;
         blinkProgressRef.current = 0;
       }
@@ -39,215 +39,276 @@ export function AnimeFace({
     }
 
     if (isBlinkingRef.current) {
-      blinkProgressRef.current += delta * 12; // Fast anime blink
-      const scaleY = Math.max(0.08, Math.abs(Math.cos(blinkProgressRef.current * Math.PI)));
+      blinkProgressRef.current += delta * 14;
+      const scaleY = Math.max(0.05, Math.abs(Math.cos(blinkProgressRef.current * Math.PI)));
 
-      if (leftEyeRef.current && rightEyeRef.current) {
-        leftEyeRef.current.scale.y = scaleY;
-        rightEyeRef.current.scale.y = scaleY;
+      if (leftEyeGroupRef.current && rightEyeGroupRef.current) {
+        leftEyeGroupRef.current.scale.y = scaleY;
+        rightEyeGroupRef.current.scale.y = scaleY;
       }
 
       if (blinkProgressRef.current >= 1) {
         isBlinkingRef.current = false;
-        if (leftEyeRef.current && rightEyeRef.current) {
-          leftEyeRef.current.scale.y = 1;
-          rightEyeRef.current.scale.y = 1;
+        if (leftEyeGroupRef.current && rightEyeGroupRef.current) {
+          leftEyeGroupRef.current.scale.y = 1;
+          rightEyeGroupRef.current.scale.y = 1;
         }
       }
     }
   });
 
   const { eyeStyle, eyebrowStyle, mouthStyle, blushStyle, earrings } = faceFeatures;
+  const eyeCol = colors.eyeColor || '#9333EA';
 
   return (
     <group position={[0, 0, 0]}>
       {/* ============================================================ */}
-      {/* 1. ANIME EYES                                                */}
+      {/* 1. ANIME EYES (Expressive VRoid/CustomCast 3D Eye Sockets)    */}
       {/* ============================================================ */}
-      <group position={[0, 0.05, 0.32]}>
-        {/* Left Eye */}
-        <group ref={leftEyeRef} position={[-0.135, 0, 0]} rotation={[-0.05, -0.1, 0.04]}>
-          {/* Eyeball Base (White Sclera) */}
+      <group position={[0, 0.04, 0.335]}>
+        {/* LEFT EYE */}
+        <group
+          ref={leftEyeGroupRef}
+          position={[-0.125, 0.02, 0]}
+          rotation={[-0.03, -0.15, 0.02]}
+        >
+          {/* Eye White Base (Sclera) with Soft Shadow */}
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.078, 16, 16]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.1} />
+            <circleGeometry args={[0.075, 32]} />
+            <meshBasicMaterial color="#FFFFFF" />
+          </mesh>
+          <mesh position={[0, 0.02, 0.001]}>
+            <planeGeometry args={[0.13, 0.035]} />
+            <meshBasicMaterial color="#E2E8F0" transparent opacity={0.35} depthWrite={false} />
           </mesh>
 
-          {/* Iris */}
-          <mesh position={[0.005, 0, 0.065]}>
-            <circleGeometry args={[0.054, 32]} />
-            <meshStandardMaterial
-              color={colors.eyeColor}
-              emissive={colors.eyeColor}
-              emissiveIntensity={0.25}
-              roughness={0.1}
-            />
-          </mesh>
+          {/* Large Stylized Anime Iris */}
+          <group position={[0.006, -0.005, 0.002]}>
+            {/* Base Deep Iris */}
+            <mesh>
+              <circleGeometry args={[0.058, 32]} />
+              <meshBasicMaterial color={eyeCol} />
+            </mesh>
 
-          {/* Pupil */}
-          <mesh position={[0.005, 0.005, 0.067]}>
-            <circleGeometry args={[0.026, 24]} />
-            <meshBasicMaterial color="#1E1B4B" />
-          </mesh>
+            {/* Iris Lower Gradient Glow */}
+            <mesh position={[0, -0.018, 0.001]}>
+              <circleGeometry args={[0.042, 32]} />
+              <meshBasicMaterial color="#FFFFFF" transparent opacity={0.45} depthWrite={false} />
+            </mesh>
 
-          {/* Highlights based on Eye Style */}
-          {eyeStyle === 'sparkle' && (
-            <>
-              <mesh position={[0.02, 0.022, 0.07]}>
-                <circleGeometry args={[0.016, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[-0.015, -0.02, 0.07]}>
-                <circleGeometry args={[0.009, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[0.025, -0.015, 0.07]}>
-                <circleGeometry args={[0.006, 12]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-            </>
-          )}
+            {/* Pupil */}
+            <mesh position={[0, 0.006, 0.002]}>
+              <circleGeometry args={[0.024, 32]} />
+              <meshBasicMaterial color="#18181B" />
+            </mesh>
 
-          {eyeStyle === 'heart' && (
-            <>
-              <mesh position={[0.015, 0.018, 0.07]} rotation={[0, 0, Math.PI / 4]}>
-                <boxGeometry args={[0.018, 0.018, 0.002]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[-0.015, -0.018, 0.07]}>
-                <circleGeometry args={[0.008, 12]} />
-                <meshBasicMaterial color="#FFB6C1" />
-              </mesh>
-            </>
-          )}
+            {/* Anime Light Highlights (Sparkle Reflections) */}
+            {eyeStyle === 'sparkle' && (
+              <>
+                {/* Main Upper Highlight */}
+                <mesh position={[0.02, 0.022, 0.004]}>
+                  <circleGeometry args={[0.016, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                {/* Lower Secondary Sparkle */}
+                <mesh position={[-0.016, -0.02, 0.004]}>
+                  <circleGeometry args={[0.01, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                {/* Micro Glint */}
+                <mesh position={[0.024, -0.012, 0.004]}>
+                  <circleGeometry args={[0.006, 12]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+              </>
+            )}
 
-          {eyeStyle === 'cateye' && (
-            <>
-              <mesh position={[0.022, 0.025, 0.07]}>
-                <circleGeometry args={[0.018, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[-0.01, -0.025, 0.07]}>
-                <circleGeometry args={[0.007, 12]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-            </>
-          )}
+            {eyeStyle === 'heart' && (
+              <>
+                <mesh position={[0.012, 0.016, 0.004]} rotation={[0, 0, Math.PI / 4]}>
+                  <boxGeometry args={[0.022, 0.022, 0.002]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                <mesh position={[-0.016, -0.018, 0.004]}>
+                  <circleGeometry args={[0.008, 12]} />
+                  <meshBasicMaterial color="#FFB6C1" />
+                </mesh>
+              </>
+            )}
 
-          {eyeStyle === 'soft' && (
-            <>
-              <mesh position={[0.012, 0.02, 0.07]}>
-                <circleGeometry args={[0.019, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-            </>
-          )}
+            {eyeStyle === 'cateye' && (
+              <>
+                <mesh position={[0.022, 0.024, 0.004]}>
+                  <circleGeometry args={[0.018, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                <mesh position={[-0.012, -0.024, 0.004]}>
+                  <circleGeometry args={[0.007, 12]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+              </>
+            )}
 
-          {/* Eyelash & Winged Liner */}
-          <mesh position={[0, 0.052, 0.066]} rotation={[0, 0, eyeStyle === 'cateye' ? -0.1 : -0.05]}>
-            <boxGeometry args={[0.115, 0.018, 0.02]} />
-            <meshStandardMaterial color="#2E1065" roughness={0.5} />
-          </mesh>
-          {/* Wing Tip */}
-          <mesh
-            position={[-0.058, eyeStyle === 'cateye' ? 0.07 : 0.06, 0.06]}
-            rotation={[0, 0, eyeStyle === 'cateye' ? 0.6 : 0.4]}
-          >
-            <boxGeometry args={[eyeStyle === 'cateye' ? 0.045 : 0.035, 0.014, 0.02]} />
-            <meshStandardMaterial color="#2E1065" roughness={0.5} />
+            {eyeStyle === 'soft' && (
+              <>
+                <mesh position={[0.01, 0.02, 0.004]}>
+                  <circleGeometry args={[0.02, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+              </>
+            )}
+          </group>
+
+          {/* Upper Thick Eyelash Arch */}
+          <group position={[0, 0.055, 0.005]} rotation={[0, 0, -0.04]}>
+            <mesh>
+              <boxGeometry args={[0.13, 0.02, 0.008]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+            {/* Winged Lash Tip */}
+            <mesh
+              position={[-0.065, eyeStyle === 'cateye' ? 0.02 : 0.012, 0]}
+              rotation={[0, 0, eyeStyle === 'cateye' ? 0.7 : 0.45]}
+            >
+              <boxGeometry args={[0.045, 0.014, 0.008]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+            {/* Cute Double Lash Spikes */}
+            <mesh position={[-0.035, 0.012, 0]} rotation={[0, 0, 0.25]}>
+              <coneGeometry args={[0.007, 0.025, 8]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+            <mesh position={[0.025, 0.01, 0]} rotation={[0, 0, -0.2]}>
+              <coneGeometry args={[0.006, 0.02, 8]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+          </group>
+
+          {/* Lower Eyelash Accent */}
+          <mesh position={[0.01, -0.065, 0.003]}>
+            <boxGeometry args={[0.06, 0.007, 0.005]} />
+            <meshBasicMaterial color="#312E81" />
           </mesh>
         </group>
 
-        {/* Right Eye */}
-        <group ref={rightEyeRef} position={[0.135, 0, 0]} rotation={[-0.05, 0.1, -0.04]}>
-          {/* Eyeball Base */}
+        {/* RIGHT EYE */}
+        <group
+          ref={rightEyeGroupRef}
+          position={[0.125, 0.02, 0]}
+          rotation={[-0.03, 0.15, -0.02]}
+        >
+          {/* Eye White Base */}
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.078, 16, 16]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.1} />
+            <circleGeometry args={[0.075, 32]} />
+            <meshBasicMaterial color="#FFFFFF" />
+          </mesh>
+          <mesh position={[0, 0.02, 0.001]}>
+            <planeGeometry args={[0.13, 0.035]} />
+            <meshBasicMaterial color="#E2E8F0" transparent opacity={0.35} depthWrite={false} />
           </mesh>
 
-          {/* Iris */}
-          <mesh position={[-0.005, 0, 0.065]}>
-            <circleGeometry args={[0.054, 32]} />
-            <meshStandardMaterial
-              color={colors.eyeColor}
-              emissive={colors.eyeColor}
-              emissiveIntensity={0.25}
-              roughness={0.1}
-            />
-          </mesh>
+          {/* Large Stylized Anime Iris */}
+          <group position={[-0.006, -0.005, 0.002]}>
+            <mesh>
+              <circleGeometry args={[0.058, 32]} />
+              <meshBasicMaterial color={eyeCol} />
+            </mesh>
 
-          {/* Pupil */}
-          <mesh position={[-0.005, 0.005, 0.067]}>
-            <circleGeometry args={[0.026, 24]} />
-            <meshBasicMaterial color="#1E1B4B" />
-          </mesh>
+            {/* Iris Lower Glow */}
+            <mesh position={[0, -0.018, 0.001]}>
+              <circleGeometry args={[0.042, 32]} />
+              <meshBasicMaterial color="#FFFFFF" transparent opacity={0.45} depthWrite={false} />
+            </mesh>
 
-          {/* Highlights */}
-          {eyeStyle === 'sparkle' && (
-            <>
-              <mesh position={[0.008, 0.022, 0.07]}>
-                <circleGeometry args={[0.016, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[-0.022, -0.02, 0.07]}>
-                <circleGeometry args={[0.009, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[0.015, -0.015, 0.07]}>
-                <circleGeometry args={[0.006, 12]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-            </>
-          )}
+            {/* Pupil */}
+            <mesh position={[0, 0.006, 0.002]}>
+              <circleGeometry args={[0.024, 32]} />
+              <meshBasicMaterial color="#18181B" />
+            </mesh>
 
-          {eyeStyle === 'heart' && (
-            <>
-              <mesh position={[0.008, 0.018, 0.07]} rotation={[0, 0, Math.PI / 4]}>
-                <boxGeometry args={[0.018, 0.018, 0.002]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[-0.02, -0.018, 0.07]}>
-                <circleGeometry args={[0.008, 12]} />
-                <meshBasicMaterial color="#FFB6C1" />
-              </mesh>
-            </>
-          )}
+            {/* Highlights */}
+            {eyeStyle === 'sparkle' && (
+              <>
+                <mesh position={[0.008, 0.022, 0.004]}>
+                  <circleGeometry args={[0.016, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                <mesh position={[-0.022, -0.02, 0.004]}>
+                  <circleGeometry args={[0.01, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                <mesh position={[0.016, -0.012, 0.004]}>
+                  <circleGeometry args={[0.006, 12]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+              </>
+            )}
 
-          {eyeStyle === 'cateye' && (
-            <>
-              <mesh position={[0.01, 0.025, 0.07]}>
-                <circleGeometry args={[0.018, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-              <mesh position={[-0.02, -0.025, 0.07]}>
-                <circleGeometry args={[0.007, 12]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-            </>
-          )}
+            {eyeStyle === 'heart' && (
+              <>
+                <mesh position={[0.008, 0.016, 0.004]} rotation={[0, 0, Math.PI / 4]}>
+                  <boxGeometry args={[0.022, 0.022, 0.002]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                <mesh position={[-0.018, -0.018, 0.004]}>
+                  <circleGeometry args={[0.008, 12]} />
+                  <meshBasicMaterial color="#FFB6C1" />
+                </mesh>
+              </>
+            )}
 
-          {eyeStyle === 'soft' && (
-            <>
-              <mesh position={[0.005, 0.02, 0.07]}>
-                <circleGeometry args={[0.019, 16]} />
-                <meshBasicMaterial color="#FFFFFF" />
-              </mesh>
-            </>
-          )}
+            {eyeStyle === 'cateye' && (
+              <>
+                <mesh position={[0.01, 0.024, 0.004]}>
+                  <circleGeometry args={[0.018, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                <mesh position={[-0.022, -0.024, 0.004]}>
+                  <circleGeometry args={[0.007, 12]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+              </>
+            )}
 
-          {/* Eyelash & Winged Liner */}
-          <mesh position={[0, 0.052, 0.066]} rotation={[0, 0, eyeStyle === 'cateye' ? 0.1 : 0.05]}>
-            <boxGeometry args={[0.115, 0.018, 0.02]} />
-            <meshStandardMaterial color="#2E1065" roughness={0.5} />
-          </mesh>
-          {/* Wing Tip */}
-          <mesh
-            position={[0.058, eyeStyle === 'cateye' ? 0.07 : 0.06, 0.06]}
-            rotation={[0, 0, eyeStyle === 'cateye' ? -0.6 : -0.4]}
-          >
-            <boxGeometry args={[eyeStyle === 'cateye' ? 0.045 : 0.035, 0.014, 0.02]} />
-            <meshStandardMaterial color="#2E1065" roughness={0.5} />
+            {eyeStyle === 'soft' && (
+              <>
+                <mesh position={[0.005, 0.02, 0.004]}>
+                  <circleGeometry args={[0.02, 16]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+              </>
+            )}
+          </group>
+
+          {/* Upper Thick Eyelash Arch */}
+          <group position={[0, 0.055, 0.005]} rotation={[0, 0, 0.04]}>
+            <mesh>
+              <boxGeometry args={[0.13, 0.02, 0.008]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+            {/* Winged Lash Tip */}
+            <mesh
+              position={[0.065, eyeStyle === 'cateye' ? 0.02 : 0.012, 0]}
+              rotation={[0, 0, eyeStyle === 'cateye' ? -0.7 : -0.45]}
+            >
+              <boxGeometry args={[0.045, 0.014, 0.008]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+            {/* Cute Double Lash Spikes */}
+            <mesh position={[0.035, 0.012, 0]} rotation={[0, 0, -0.25]}>
+              <coneGeometry args={[0.007, 0.025, 8]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+            <mesh position={[-0.025, 0.01, 0]} rotation={[0, 0, 0.2]}>
+              <coneGeometry args={[0.006, 0.02, 8]} />
+              <meshBasicMaterial color="#1E1B4B" />
+            </mesh>
+          </group>
+
+          {/* Lower Eyelash Accent */}
+          <mesh position={[-0.01, -0.065, 0.003]}>
+            <boxGeometry args={[0.06, 0.007, 0.005]} />
+            <meshBasicMaterial color="#312E81" />
           </mesh>
         </group>
       </group>
@@ -255,118 +316,143 @@ export function AnimeFace({
       {/* ============================================================ */}
       {/* 2. EYEBROWS                                                  */}
       {/* ============================================================ */}
-      <group position={[0, 0.14, 0.36]}>
+      <group position={[0, 0.16, 0.355]}>
         {eyebrowStyle === 'gentle' && (
           <>
-            <mesh position={[-0.13, 0, 0]} rotation={[0, 0, -0.08]}>
-              <boxGeometry args={[0.075, 0.009, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[-0.125, 0, 0]} rotation={[0, -0.15, -0.08]}>
+              <boxGeometry args={[0.085, 0.012, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
-            <mesh position={[0.13, 0, 0]} rotation={[0, 0, 0.08]}>
-              <boxGeometry args={[0.075, 0.009, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[0.125, 0, 0]} rotation={[0, 0.15, 0.08]}>
+              <boxGeometry args={[0.085, 0.012, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
           </>
         )}
 
         {eyebrowStyle === 'straight' && (
           <>
-            <mesh position={[-0.13, 0, 0]} rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.08, 0.01, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[-0.125, 0, 0]} rotation={[0, -0.15, 0]}>
+              <boxGeometry args={[0.09, 0.013, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
-            <mesh position={[0.13, 0, 0]} rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.08, 0.01, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[0.125, 0, 0]} rotation={[0, 0.15, 0]}>
+              <boxGeometry args={[0.09, 0.013, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
           </>
         )}
 
         {eyebrowStyle === 'confident' && (
           <>
-            <mesh position={[-0.13, 0.01, 0]} rotation={[0, 0, -0.22]}>
-              <boxGeometry args={[0.08, 0.01, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[-0.125, 0.01, 0]} rotation={[0, -0.15, -0.22]}>
+              <boxGeometry args={[0.09, 0.013, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
-            <mesh position={[0.13, 0.01, 0]} rotation={[0, 0, 0.22]}>
-              <boxGeometry args={[0.08, 0.01, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[0.125, 0.01, 0]} rotation={[0, 0.15, 0.22]}>
+              <boxGeometry args={[0.09, 0.013, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
           </>
         )}
 
         {eyebrowStyle === 'playful' && (
           <>
-            <mesh position={[-0.13, 0.02, 0]} rotation={[0, 0, 0.12]}>
-              <boxGeometry args={[0.075, 0.009, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[-0.125, 0.02, 0]} rotation={[0, -0.15, 0.12]}>
+              <boxGeometry args={[0.085, 0.012, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
-            <mesh position={[0.13, 0.01, 0]} rotation={[0, 0, 0.1]}>
-              <boxGeometry args={[0.075, 0.009, 0.01]} />
-              <meshStandardMaterial color={colors.hairColor} roughness={0.4} />
+            <mesh position={[0.125, 0.01, 0]} rotation={[0, 0.15, 0.08]}>
+              <boxGeometry args={[0.085, 0.012, 0.01]} />
+              <meshBasicMaterial color={colors.hairColor} />
             </mesh>
           </>
         )}
       </group>
 
       {/* ============================================================ */}
-      {/* 3. BLUSH STYLES                                              */}
+      {/* 3. SOFT ANIME NOSE                                           */}
       {/* ============================================================ */}
-      <group position={[0, -0.01, 0.36]}>
-        {/* Left Blush */}
-        <mesh position={[-0.17, -0.02, 0]} rotation={[0, -0.2, 0]}>
-          <circleGeometry args={[blushStyle === 'rosy' ? 0.06 : 0.045, 16]} />
-          <meshBasicMaterial
-            color={blushStyle === 'peachy' ? '#FF7A59' : '#FF4D8D'}
-            transparent
-            opacity={colors.blushIntensity * 0.45}
-            depthWrite={false}
-          />
+      <group position={[0, -0.015, 0.38]}>
+        <mesh>
+          <sphereGeometry args={[0.014, 16, 16]} />
+          <meshStandardMaterial color={colors.skinTone} roughness={0.4} />
         </mesh>
-        {blushStyle === 'sparkles' && (
-          <mesh position={[-0.17, -0.01, 0.002]} rotation={[0, 0, 0.3]}>
-            <planeGeometry args={[0.035, 0.004]} />
-            <meshBasicMaterial color="#FF1493" transparent opacity={0.6} />
-          </mesh>
-        )}
-
-        {/* Right Blush */}
-        <mesh position={[0.17, -0.02, 0]} rotation={[0, 0.2, 0]}>
-          <circleGeometry args={[blushStyle === 'rosy' ? 0.06 : 0.045, 16]} />
-          <meshBasicMaterial
-            color={blushStyle === 'peachy' ? '#FF7A59' : '#FF4D8D'}
-            transparent
-            opacity={colors.blushIntensity * 0.45}
-            depthWrite={false}
-          />
+        {/* Subtle Nose Shadow Accent */}
+        <mesh position={[0, -0.01, 0.002]}>
+          <circleGeometry args={[0.008, 12]} />
+          <meshBasicMaterial color="#E2A89C" transparent opacity={0.35} depthWrite={false} />
         </mesh>
-        {blushStyle === 'sparkles' && (
-          <mesh position={[0.17, -0.01, 0.002]} rotation={[0, 0, -0.3]}>
-            <planeGeometry args={[0.035, 0.004]} />
-            <meshBasicMaterial color="#FF1493" transparent opacity={0.6} />
-          </mesh>
-        )}
       </group>
 
       {/* ============================================================ */}
-      {/* 4. ANIME NOSE                                                */}
+      {/* 4. BLUSHING CHEEKS                                           */}
       {/* ============================================================ */}
-      <mesh position={[0, 0.01, 0.39]}>
-        <sphereGeometry args={[0.013, 8, 8]} />
-        <meshStandardMaterial color={colors.skinTone} roughness={0.3} />
-      </mesh>
+      <group position={[0, -0.04, 0.36]}>
+        {/* Left Cheek Blush */}
+        <group position={[-0.165, 0, 0]} rotation={[0, -0.3, 0]}>
+          <mesh>
+            <circleGeometry args={[blushStyle === 'rosy' ? 0.065 : 0.052, 24]} />
+            <meshBasicMaterial
+              color={blushStyle === 'peachy' ? '#FF7A59' : '#FF4081'}
+              transparent
+              opacity={(colors.blushIntensity || 0.85) * 0.45}
+              depthWrite={false}
+            />
+          </mesh>
+          {blushStyle === 'sparkles' && (
+            <>
+              <mesh position={[-0.015, 0.01, 0.002]} rotation={[0, 0, 0.35]}>
+                <planeGeometry args={[0.035, 0.005]} />
+                <meshBasicMaterial color="#FF1493" transparent opacity={0.7} />
+              </mesh>
+              <mesh position={[0.01, -0.01, 0.002]} rotation={[0, 0, 0.35]}>
+                <planeGeometry args={[0.03, 0.005]} />
+                <meshBasicMaterial color="#FF1493" transparent opacity={0.7} />
+              </mesh>
+            </>
+          )}
+        </group>
+
+        {/* Right Cheek Blush */}
+        <group position={[0.165, 0, 0]} rotation={[0, 0.3, 0]}>
+          <mesh>
+            <circleGeometry args={[blushStyle === 'rosy' ? 0.065 : 0.052, 24]} />
+            <meshBasicMaterial
+              color={blushStyle === 'peachy' ? '#FF7A59' : '#FF4081'}
+              transparent
+              opacity={(colors.blushIntensity || 0.85) * 0.45}
+              depthWrite={false}
+            />
+          </mesh>
+          {blushStyle === 'sparkles' && (
+            <>
+              <mesh position={[0.015, 0.01, 0.002]} rotation={[0, 0, -0.35]}>
+                <planeGeometry args={[0.035, 0.005]} />
+                <meshBasicMaterial color="#FF1493" transparent opacity={0.7} />
+              </mesh>
+              <mesh position={[-0.01, -0.01, 0.002]} rotation={[0, 0, -0.35]}>
+                <planeGeometry args={[0.03, 0.005]} />
+                <meshBasicMaterial color="#FF1493" transparent opacity={0.7} />
+              </mesh>
+            </>
+          )}
+        </group>
+      </group>
 
       {/* ============================================================ */}
-      {/* 5. MOUTH & SMILE STYLES                                      */}
+      {/* 5. ANIME MOUTH & LIPS                                        */}
       {/* ============================================================ */}
-      <group position={[0, -0.09, 0.36]}>
+      <group position={[0, -0.11, 0.365]}>
         {mouthStyle === 'smile' && (
           <group>
+            {/* Cute curved upper smile line */}
             <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI]}>
-              <torusGeometry args={[0.026, 0.006, 8, 16, Math.PI]} />
-              <meshStandardMaterial color={colors.lipColor} roughness={0.2} />
+              <torusGeometry args={[0.028, 0.006, 8, 20, Math.PI * 0.9]} />
+              <meshBasicMaterial color="#BE185D" />
             </mesh>
-            <mesh position={[0.008, -0.008, 0.005]}>
+            {/* Lip Gloss Highlight */}
+            <mesh position={[0.008, -0.008, 0.004]}>
               <sphereGeometry args={[0.005, 8, 8]} />
               <meshBasicMaterial color="#FFFFFF" />
             </mesh>
@@ -374,38 +460,44 @@ export function AnimeFace({
         )}
 
         {mouthStyle === 'open' && (
-          <group>
-            <mesh position={[0, -0.005, 0]}>
-              <circleGeometry args={[0.025, 16]} />
-              <meshStandardMaterial color="#E11D48" roughness={0.3} />
+          <group position={[0, -0.005, 0]}>
+            {/* Open Happy Mouth cavity */}
+            <mesh>
+              <circleGeometry args={[0.026, 20]} />
+              <meshBasicMaterial color="#881337" />
             </mesh>
-            {/* Teeth line */}
-            <mesh position={[0, 0.008, 0.002]}>
-              <boxGeometry args={[0.032, 0.008, 0.002]} />
+            {/* Cute White Top Teeth */}
+            <mesh position={[0, 0.01, 0.002]}>
+              <boxGeometry args={[0.034, 0.01, 0.002]} />
               <meshBasicMaterial color="#FFFFFF" />
+            </mesh>
+            {/* Cute Pink Tongue */}
+            <mesh position={[0, -0.01, 0.002]}>
+              <circleGeometry args={[0.016, 16]} />
+              <meshBasicMaterial color="#FB7185" />
             </mesh>
           </group>
         )}
 
         {mouthStyle === 'catpout' && (
-          <group>
-            {/* :3 Cat Lip Wave */}
-            <mesh position={[-0.014, 0, 0]} rotation={[0, 0, Math.PI * 0.8]}>
-              <torusGeometry args={[0.014, 0.005, 8, 12, Math.PI * 0.9]} />
-              <meshStandardMaterial color={colors.lipColor} roughness={0.2} />
+          <group position={[0, 0, 0]}>
+            {/* :3 Cat Lip Curve */}
+            <mesh position={[-0.015, 0, 0]} rotation={[0, 0, Math.PI * 0.85]}>
+              <torusGeometry args={[0.016, 0.005, 8, 14, Math.PI * 0.9]} />
+              <meshBasicMaterial color="#BE185D" />
             </mesh>
-            <mesh position={[0.014, 0, 0]} rotation={[0, 0, Math.PI * 0.2]}>
-              <torusGeometry args={[0.014, 0.005, 8, 12, Math.PI * 0.9]} />
-              <meshStandardMaterial color={colors.lipColor} roughness={0.2} />
+            <mesh position={[0.015, 0, 0]} rotation={[0, 0, Math.PI * 0.15]}>
+              <torusGeometry args={[0.016, 0.005, 8, 14, Math.PI * 0.9]} />
+              <meshBasicMaterial color="#BE185D" />
             </mesh>
           </group>
         )}
 
         {mouthStyle === 'smirk' && (
-          <group>
-            <mesh position={[0.01, 0, 0]} rotation={[0, 0, Math.PI * 1.1]}>
-              <torusGeometry args={[0.028, 0.006, 8, 16, Math.PI * 0.8]} />
-              <meshStandardMaterial color={colors.lipColor} roughness={0.2} />
+          <group position={[0.008, 0, 0]}>
+            <mesh rotation={[0, 0, Math.PI * 1.1]}>
+              <torusGeometry args={[0.03, 0.006, 8, 20, Math.PI * 0.85]} />
+              <meshBasicMaterial color="#BE185D" />
             </mesh>
           </group>
         )}

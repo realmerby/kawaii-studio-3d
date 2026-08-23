@@ -10,8 +10,8 @@ import { ALL_ITEMS, getItemById, ITEMS_BY_CATEGORY } from '@/data/clothing';
 import { FULL_CHARACTER_PRESETS, OUTFIT_PRESETS } from '@/data/presets';
 import { POSES } from '@/data/poses/posesList';
 
-const STORAGE_KEY = 'kawaii_studio_save_v1';
-const FAVORITES_KEY = 'kawaii_studio_favorites_v1';
+const STORAGE_KEY = 'kawaii_studio_save_v2';
+const FAVORITES_KEY = 'kawaii_studio_favorites_v2';
 
 export interface GameState {
   // Character clothing & items
@@ -86,10 +86,10 @@ export interface GameState {
 }
 
 const DEFAULT_EQUIPPED: Record<ClothingCategory, string | null> = {
-  hair: 'hair-twintails',
-  headAccessory: 'head-kitty-ears',
-  top: 'top-bunny-hoodie',
-  bottom: 'bottom-pleated-skirt',
+  hair: 'hair-gyaruwaves',
+  headAccessory: 'head-big-silk-bow',
+  top: 'top-ruffle-camisole',
+  bottom: 'bottom-frilly-rara',
   dress: null,
   socks: 'socks-thigh-high-striped',
   shoes: 'shoes-platform-mary-janes',
@@ -98,10 +98,10 @@ const DEFAULT_EQUIPPED: Record<ClothingCategory, string | null> = {
 };
 
 const DEFAULT_COLORS: CharacterColors = {
-  hairColor: '#FFA8CA',
-  hairHighlightColor: '#FFFFFF',
+  hairColor: '#18181B',
+  hairHighlightColor: '#FEF08A',
   eyeColor: '#9333EA',
-  skinTone: '#FFF5F0',
+  skinTone: '#FFF8F5',
   blushIntensity: 0.85,
   lipColor: '#FB7185',
 };
@@ -137,14 +137,14 @@ function saveToLocalStorage(state: Partial<GameState>) {
 export const useGameStore = create<GameState>((set, get) => ({
   equipped: { ...DEFAULT_EQUIPPED },
   hiddenBackup: {
-    top: 'top-bunny-hoodie',
-    bottom: 'bottom-pleated-skirt',
+    top: 'top-ruffle-camisole',
+    bottom: 'bottom-frilly-rara',
   },
   itemColors: {},
   colors: { ...DEFAULT_COLORS },
   faceFeatures: { ...DEFAULT_FACE },
   favorites: [],
-  poseId: 'pose-peace-sign',
+  poseId: 'pose-forehead-salute',
   idleAnimation: true,
   animationSpeed: 1,
   autoRotate: false,
@@ -212,8 +212,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     if (category === 'dress' && newEquipped.dress) {
       newEquipped.dress = null;
-      newEquipped.top = state.hiddenBackup.top || 'top-bunny-hoodie';
-      newEquipped.bottom = state.hiddenBackup.bottom || 'bottom-pleated-skirt';
+      newEquipped.top = state.hiddenBackup.top || 'top-ruffle-camisole';
+      newEquipped.bottom = state.hiddenBackup.bottom || 'bottom-frilly-rara';
     } else {
       newEquipped[category] = null;
     }
@@ -388,7 +388,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const randomPose = POSES[Math.floor(Math.random() * POSES.length)];
 
-    const hairColors = ['#FFA8CA', '#FBBF24', '#C084FC', '#38BDF8', '#312E81', '#F43F5E', '#18181B', '#FFFFFF'];
+    const hairColors = ['#18181B', '#FFA8CA', '#FBBF24', '#C084FC', '#38BDF8', '#312E81', '#F43F5E', '#FFFFFF'];
     const eyeColors = ['#9333EA', '#0284C7', '#DB2777', '#059669', '#EAB308', '#DC2626'];
     const skinTones = ['#FFF8F5', '#FFF0E8', '#FFE4D6', '#FCD5B5'];
 
@@ -412,7 +412,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       equipped: { ...DEFAULT_EQUIPPED },
       colors: { ...DEFAULT_COLORS },
       faceFeatures: { ...DEFAULT_FACE },
-      poseId: 'pose-peace-sign',
+      poseId: 'pose-forehead-salute',
       sparkleCount: get().sparkleCount + 1,
     };
     set(updated);

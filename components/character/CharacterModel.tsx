@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore } from '@/lib/store';
-import { CharacterRig } from './CharacterRig';
+import { VRMCharacter } from './VRMCharacter';
 
 export function CharacterModel() {
   const groupRef = useRef<THREE.Group>(null);
@@ -18,8 +18,8 @@ export function CharacterModel() {
 
   return (
     <group ref={groupRef} position={[0, -0.35, 0]}>
-      {/* 3D Character Rig */}
-      <CharacterRig />
+      {/* Authentic VRoid / CustomCast 3D Anime Character */}
+      <VRMCharacter />
 
       {/* Cute Kawaii Pedestal / Soft Stage Floor */}
       <group position={[0, -0.98, 0]}>

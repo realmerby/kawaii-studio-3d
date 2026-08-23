@@ -11,20 +11,20 @@ import { getPoseById } from '@/data/poses/posesList';
 
 const PRESET_CONFIGS: Record<CameraPreset, { target: [number, number, number]; position: [number, number, number] }> = {
   full: {
-    target: [0, 0.15, 0],
-    position: [0, 0.25, 3.4],
+    target: [0, -0.05, 0],
+    position: [0, 0.15, 2.35],
   },
   face: {
-    target: [0, 0.82, 0],
-    position: [0, 0.85, 1.25],
+    target: [0, 0.48, 0],
+    position: [0, 0.52, 0.95],
   },
   outfit: {
-    target: [0, 0.2, 0],
-    position: [0, 0.25, 2.1],
+    target: [0, 0.05, 0],
+    position: [0, 0.12, 1.5],
   },
   shoes: {
     target: [0, -0.65, 0],
-    position: [0, -0.6, 1.45],
+    position: [0, -0.6, 1.1],
   },
 };
 
@@ -35,8 +35,8 @@ export function CameraController() {
   const cameraResetCount = useGameStore((state) => state.cameraResetCount);
   const poseId = useGameStore((state) => state.poseId);
 
-  const targetLookAt = useRef(new THREE.Vector3(0, 0.15, 0));
-  const targetCamPos = useRef(new THREE.Vector3(0, 0.25, 3.4));
+  const targetLookAt = useRef(new THREE.Vector3(0, -0.05, 0));
+  const targetCamPos = useRef(new THREE.Vector3(0, 0.15, 2.35));
   const isTransitioning = useRef(false);
 
   // Full camera preset transitions
@@ -49,16 +49,6 @@ export function CameraController() {
     targetCamPos.current.set(config.position[0], config.position[1] + offsetY, config.position[2]);
     isTransitioning.current = true;
   }, [cameraPreset, cameraResetCount]);
-
-  // Subtle lookAt adaptation when selecting dynamic/sitting poses
-  useEffect(() => {
-    if (!controlsRef.current) return;
-    const pose = getPoseById(poseId);
-    if (cameraPreset === 'full') {
-      const offsetY = pose.cameraSuggestion?.targetOffsetY || 0;
-      targetLookAt.current.y = 0.15 + offsetY;
-    }
-  }, [poseId, cameraPreset]);
 
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
@@ -76,9 +66,8 @@ export function CameraController() {
         isTransitioning.current = false;
       }
     } else {
-      // Gentle target tracking for sitting pose without moving camera distance
       const pose = getPoseById(poseId);
-      const targetY = 0.15 + (cameraPreset === 'full' ? (pose.cameraSuggestion?.targetOffsetY || 0) : 0);
+      const targetY = -0.05 + (cameraPreset === 'full' ? (pose.cameraSuggestion?.targetOffsetY || 0) : 0);
       controlsRef.current.target.y = THREE.MathUtils.lerp(controlsRef.current.target.y, targetY, 0.05);
     }
 
@@ -90,11 +79,11 @@ export function CameraController() {
       ref={controlsRef}
       enableDamping
       dampingFactor={0.08}
-      minDistance={0.8}
-      maxDistance={5.0}
+      minDistance={0.7}
+      maxDistance={4.2}
       minPolarAngle={Math.PI * 0.1}
-      maxPolarAngle={Math.PI * 0.52} // Prevent camera from flipping under the stage
-      target={[0, 0.15, 0]}
+      maxPolarAngle={Math.PI * 0.52}
+      target={[0, -0.05, 0]}
       makeDefault
     />
   );

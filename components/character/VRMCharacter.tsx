@@ -6,8 +6,195 @@ import { useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils, VRMHumanBoneName } from '@pixiv/three-vrm';
 import { useGameStore } from '@/lib/store';
-import { getPoseById } from '@/data/poses/posesList';
-import { AccessoriesRenderer } from './AccessoriesRenderer';
+
+// Accurate VRM Humanoid Bone Transforms for each of the 12 Anime Poses
+const VRM_POSES: Record<
+  string,
+  {
+    head?: [number, number, number];
+    chest?: [number, number, number];
+    hips?: [number, number, number];
+    leftUpperArm?: [number, number, number];
+    leftLowerArm?: [number, number, number];
+    rightUpperArm?: [number, number, number];
+    rightLowerArm?: [number, number, number];
+    leftUpperLeg?: [number, number, number];
+    leftLowerLeg?: [number, number, number];
+    rightUpperLeg?: [number, number, number];
+    rightLowerLeg?: [number, number, number];
+    bodyOffsetY?: number;
+  }
+> = {
+  // 1. Forehead Salute (Like the reference image!)
+  'pose-forehead-salute': {
+    head: [0.08, -0.1, 0.14],
+    chest: [0.02, -0.05, 0],
+    hips: [0, 0.05, -0.02],
+    leftUpperArm: [0.12, 0, -1.2],
+    leftLowerArm: [0.1, 0, -0.1],
+    rightUpperArm: [-1.4, 0.35, 0.85],
+    rightLowerArm: [-0.2, -1.6, -0.45],
+    leftUpperLeg: [0.04, 0.08, -0.06],
+    rightUpperLeg: [-0.04, -0.08, 0.06],
+    bodyOffsetY: 0,
+  },
+
+  // 2. Kawaii Peace Sign (✌️)
+  'pose-peace-sign': {
+    head: [0.06, 0.08, 0.15],
+    chest: [0.02, 0, 0],
+    hips: [0, 0, 0],
+    leftUpperArm: [0.1, 0, -1.2],
+    leftLowerArm: [0.1, 0, -0.1],
+    rightUpperArm: [-0.95, 0.25, 0.95],
+    rightLowerArm: [-0.15, -1.5, -0.5],
+    leftUpperLeg: [0.04, 0.08, -0.06],
+    rightUpperLeg: [-0.04, -0.08, 0.06],
+    bodyOffsetY: 0,
+  },
+
+  // 3. Cute Standing (Pigeon Toes)
+  'pose-cute-standing': {
+    head: [0.05, 0.05, 0.08],
+    chest: [0.02, 0, 0],
+    hips: [0, 0.04, 0],
+    leftUpperArm: [0.1, 0.1, -1.2],
+    leftLowerArm: [0.2, 0, -0.2],
+    rightUpperArm: [0.1, -0.1, 1.2],
+    rightLowerArm: [0.2, 0, 0.2],
+    leftUpperLeg: [0.02, 0.12, -0.05],
+    rightUpperLeg: [0.02, -0.12, 0.05],
+    bodyOffsetY: 0,
+  },
+
+  // 4. Hand on Hip (Gyaru Pose)
+  'pose-hand-on-hip': {
+    head: [-0.04, 0.1, -0.08],
+    chest: [0.02, -0.06, -0.04],
+    hips: [-0.02, 0.12, 0.08],
+    leftUpperArm: [0.15, 0.3, -0.75],
+    leftLowerArm: [0.1, 1.45, 0.4],
+    rightUpperArm: [0.1, 0, 1.25],
+    rightLowerArm: [0.1, 0, 0.1],
+    leftUpperLeg: [0.06, -0.08, 0.08],
+    rightUpperLeg: [-0.04, 0.08, -0.06],
+    bodyOffsetY: 0,
+  },
+
+  // 5. Cute Wave (👋)
+  'pose-waving': {
+    head: [0.05, 0.08, 0.08],
+    chest: [0, 0.04, 0.02],
+    hips: [0, -0.04, -0.02],
+    leftUpperArm: [0.1, 0, -1.2],
+    leftLowerArm: [0.1, 0, -0.1],
+    rightUpperArm: [-1.3, 0.4, 0.5],
+    rightLowerArm: [0.1, -0.9, -0.3],
+    leftUpperLeg: [0.02, 0.06, -0.05],
+    rightUpperLeg: [-0.02, -0.06, 0.05],
+    bodyOffsetY: 0,
+  },
+
+  // 6. Shy Hands Behind (🥺)
+  'pose-shy-pose': {
+    head: [-0.08, 0.04, 0.06],
+    chest: [0.06, 0, 0],
+    hips: [-0.04, 0, 0],
+    leftUpperArm: [0.35, 0, -0.4],
+    leftLowerArm: [0.3, 0, -0.3],
+    rightUpperArm: [0.35, 0, 0.4],
+    rightLowerArm: [0.3, 0, 0.3],
+    leftUpperLeg: [0.05, 0.15, -0.05],
+    rightUpperLeg: [0.05, -0.15, 0.05],
+    bodyOffsetY: 0,
+  },
+
+  // 7. Finger to Cheek (💖)
+  'pose-hand-near-face': {
+    head: [0.06, -0.08, 0.12],
+    chest: [0.02, -0.04, 0],
+    hips: [0, 0.04, -0.02],
+    leftUpperArm: [0.15, 0, -1.2],
+    leftLowerArm: [0.1, 0, -0.1],
+    rightUpperArm: [-1.05, 0.25, 0.85],
+    rightLowerArm: [-0.1, -1.45, -0.4],
+    leftUpperLeg: [0.04, 0.08, -0.06],
+    rightUpperLeg: [-0.04, -0.08, 0.06],
+    bodyOffsetY: 0,
+  },
+
+  // 8. Anime Idol Sparkle (⭐)
+  'pose-idol-pose': {
+    head: [0.06, -0.1, 0.1],
+    chest: [0.04, 0.06, 0.02],
+    hips: [-0.04, -0.06, -0.02],
+    leftUpperArm: [0.35, 0.2, -0.6],
+    leftLowerArm: [0.3, 0.9, 0.4],
+    rightUpperArm: [-1.5, 0.3, 0.6],
+    rightLowerArm: [0.2, 0, 0.2],
+    leftUpperLeg: [-0.05, 0.08, -0.06],
+    rightUpperLeg: [0.06, -0.1, 0.08],
+    bodyOffsetY: 0,
+  },
+
+  // 9. Cute Kneeling / Sitting (🪑)
+  'pose-sitting': {
+    head: [0.05, 0.04, 0.06],
+    chest: [0.04, 0, 0],
+    hips: [-0.3, 0, 0],
+    leftUpperLeg: [1.3, 0.08, -0.1],
+    leftLowerLeg: [-1.9, 0, 0],
+    rightUpperLeg: [1.3, -0.08, 0.1],
+    rightLowerLeg: [-1.9, 0, 0],
+    leftUpperArm: [0.25, 0, -1.0],
+    leftLowerArm: [0.5, 0.2, 0.2],
+    rightUpperArm: [0.25, 0, 1.0],
+    rightLowerArm: [0.5, -0.2, -0.2],
+    bodyOffsetY: -0.38,
+  },
+
+  // 10. Over the Shoulder (👀)
+  'pose-looking-back': {
+    head: [0.02, 0.85, 0.08],
+    chest: [0, 0.6, 0],
+    hips: [0, 0.35, 0],
+    leftUpperArm: [0.15, 0, -1.1],
+    leftLowerArm: [0.2, 0, -0.1],
+    rightUpperArm: [0.15, 0, 1.1],
+    rightLowerArm: [0.2, 0, 0.1],
+    leftUpperLeg: [-0.04, 0.15, -0.05],
+    rightUpperLeg: [0.04, -0.15, 0.05],
+    bodyOffsetY: 0,
+  },
+
+  // 11. Playful Crossed Arms (😏)
+  'pose-crossed-arms': {
+    head: [-0.04, 0.12, -0.06],
+    chest: [0.04, 0, 0],
+    hips: [-0.04, 0.06, 0.04],
+    leftUpperArm: [0.55, 0.35, -0.6],
+    leftLowerArm: [0.4, 1.3, 0.5],
+    rightUpperArm: [0.55, -0.35, 0.6],
+    rightLowerArm: [0.4, -1.3, -0.5],
+    leftUpperLeg: [0.05, -0.08, 0.06],
+    rightUpperLeg: [-0.05, 0.08, -0.06],
+    bodyOffsetY: 0,
+  },
+
+  // 12. Gyaru Catwalk (👠)
+  'pose-fashion-pose': {
+    head: [0.02, -0.08, 0.06],
+    chest: [0, 0.08, -0.04],
+    hips: [0, -0.08, 0.04],
+    leftUpperArm: [0.25, 0, -1.1],
+    leftLowerArm: [0.3, 0, -0.2],
+    rightUpperArm: [-0.3, 0, 1.1],
+    rightLowerArm: [0.35, 0, 0.2],
+    leftUpperLeg: [0.25, 0.06, -0.04],
+    rightUpperLeg: [-0.2, -0.06, 0.04],
+    bodyOffsetY: 0,
+  },
+};
 
 export function VRMCharacter() {
   const [vrm, setVrm] = useState<VRM | null>(null);
@@ -24,7 +211,6 @@ export function VRMCharacter() {
   const groupRef = useRef<THREE.Group>(null);
   const headBoneRef = useRef<THREE.Object3D | null>(null);
   const neckBoneRef = useRef<THREE.Object3D | null>(null);
-  const chestBoneRef = useRef<THREE.Object3D | null>(null);
   const hipsBoneRef = useRef<THREE.Object3D | null>(null);
 
   // Load VRM Model
@@ -41,16 +227,14 @@ export function VRMCharacter() {
           VRMUtils.combineSkeletons(gltf.scene);
           VRMUtils.combineMorphs(loadedVrm);
 
-          // Rotate model to face the front camera directly
+          // Face the camera directly
           loadedVrm.scene.rotation.y = 0;
           loadedVrm.scene.position.set(0, -0.85, 0);
 
-          // Cache Bone Nodes
           const humanoid = loadedVrm.humanoid;
           if (humanoid) {
             headBoneRef.current = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
             neckBoneRef.current = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Neck);
-            chestBoneRef.current = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Chest);
             hipsBoneRef.current = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Hips);
           }
 
@@ -85,42 +269,42 @@ export function VRMCharacter() {
           const matName = (mat.name || '').toLowerCase();
           const meshName = (mesh.name || '').toLowerCase();
 
-          // Hair Material Customization
+          // Hair Material
           if (matName.includes('hair') || meshName.includes('hair')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(hairCol);
             }
           }
 
-          // Eye & Iris Material Customization
+          // Eye & Iris Material
           if (matName.includes('eye') || matName.includes('iris') || meshName.includes('eye')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(eyeCol);
             }
           }
 
-          // Skin & Face Material Customization
+          // Skin & Face Material
           if (matName.includes('skin') || matName.includes('body') || matName.includes('face')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(skinCol);
             }
           }
 
-          // Top Clothing Material Customization
-          if (matName.includes('top') || matName.includes('shirt') || matName.includes('cloth')) {
+          // Top Clothing
+          if (matName.includes('top') || matName.includes('shirt') || matName.includes('cloth') || matName.includes('jacket') || matName.includes('cardigan')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(topCol);
             }
           }
 
-          // Bottom / Skirt Material Customization
+          // Bottom / Skirt
           if (matName.includes('bottom') || matName.includes('skirt') || matName.includes('pant')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(bottomCol);
             }
           }
 
-          // Shoes Material Customization
+          // Shoes
           if (matName.includes('shoe') || matName.includes('foot')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(shoesCol);
@@ -131,7 +315,7 @@ export function VRMCharacter() {
     });
   }, [vrm, equipped, itemColors, colors]);
 
-  // Real-time Bone Rigging, Spring Physics & Blendshape Poses
+  // Real-time Smooth Bone Animation & Spring Physics
   useFrame(({ clock }, delta) => {
     if (!vrm) return;
 
@@ -139,7 +323,7 @@ export function VRMCharacter() {
     vrm.update(delta);
 
     const t = clock.getElapsedTime() * animationSpeed;
-    const pose = getPoseById(poseId);
+    const poseData = VRM_POSES[poseId] || VRM_POSES['pose-forehead-salute'];
     const humanoid = vrm.humanoid;
     if (!humanoid) return;
 
@@ -153,151 +337,61 @@ export function VRMCharacter() {
         vrm.expressionManager.setValue('blink', 0);
       }
 
-      // Facial Expression style
       if (faceFeatures.mouthStyle === 'open') {
         vrm.expressionManager.setValue('aa', 0.5);
         vrm.expressionManager.setValue('happy', 0.8);
       } else if (faceFeatures.mouthStyle === 'smile') {
         vrm.expressionManager.setValue('happy', 0.7);
-        vrm.expressionManager.setValue('relaxed', 0.4);
+        vrm.expressionManager.setValue('relaxed', 0.3);
       } else if (faceFeatures.mouthStyle === 'smirk') {
         vrm.expressionManager.setValue('surprised', 0.2);
-        vrm.expressionManager.setValue('happy', 0.4);
+        vrm.expressionManager.setValue('happy', 0.5);
       }
 
       vrm.expressionManager.update();
     }
 
-    const idleHead = idleAnimation && pose.idleWiggle
-      ? Math.sin(t * (pose.idleWiggle.speed || 1.5)) * (pose.idleWiggle.headAmplitude || 0.02)
-      : 0;
-    const idleHip = idleAnimation && pose.idleWiggle
-      ? Math.cos(t * (pose.idleWiggle.speed || 1.5)) * (pose.idleWiggle.hipAmplitude || 0.02)
-      : 0;
+    const idleHead = idleAnimation ? Math.sin(t * 1.5) * 0.02 : 0;
+    const idleHip = idleAnimation ? Math.cos(t * 1.5) * 0.015 : 0;
+    const lerpFactor = 1 - Math.exp(-8 * delta);
 
-    // Head
-    const headNode = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
-    if (headNode) {
-      headNode.rotation.set(
-        pose.transforms.head[0],
-        pose.transforms.head[1] + idleHead,
-        pose.transforms.head[2]
-      );
+    // Root / Position Offset
+    if (poseData.bodyOffsetY !== undefined) {
+      const targetY = -0.85 + poseData.bodyOffsetY;
+      vrm.scene.position.y = THREE.MathUtils.lerp(vrm.scene.position.y, targetY, lerpFactor);
     }
 
-    // Chest & Spine
-    const chestNode = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Chest);
-    if (chestNode) {
-      chestNode.rotation.set(
-        pose.transforms.torso[0],
-        pose.transforms.torso[1],
-        pose.transforms.torso[2]
-      );
-    }
+    // Apply Smooth Lerped Humanoid Bone Rotations
+    const applyBone = (boneName: VRMHumanBoneName, rot?: [number, number, number], extraOffset?: [number, number, number]) => {
+      const node = humanoid.getNormalizedBoneNode(boneName);
+      if (!node || !rot) return;
+      const ox = extraOffset ? extraOffset[0] : 0;
+      const oy = extraOffset ? extraOffset[1] : 0;
+      const oz = extraOffset ? extraOffset[2] : 0;
 
-    // Hips
-    const hipsNode = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Hips);
-    if (hipsNode) {
-      hipsNode.rotation.set(
-        pose.transforms.hips[0],
-        pose.transforms.hips[1] + idleHip,
-        pose.transforms.hips[2]
-      );
-    }
+      node.rotation.x = THREE.MathUtils.lerp(node.rotation.x, rot[0] + ox, lerpFactor);
+      node.rotation.y = THREE.MathUtils.lerp(node.rotation.y, rot[1] + oy, lerpFactor);
+      node.rotation.z = THREE.MathUtils.lerp(node.rotation.z, rot[2] + oz, lerpFactor);
+    };
 
-    // Left Arm
-    const leftUpperArm = humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftUpperArm);
-    if (leftUpperArm) {
-      leftUpperArm.rotation.set(
-        pose.transforms.leftUpperArm[0],
-        pose.transforms.leftUpperArm[1],
-        pose.transforms.leftUpperArm[2] - 1.15
-      );
-    }
+    applyBone(VRMHumanBoneName.Head, poseData.head, [0, idleHead, idleHead * 0.5]);
+    applyBone(VRMHumanBoneName.Chest, poseData.chest);
+    applyBone(VRMHumanBoneName.Hips, poseData.hips, [0, idleHip, 0]);
 
-    const leftLowerArm = humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftLowerArm);
-    if (leftLowerArm) {
-      leftLowerArm.rotation.set(
-        pose.transforms.leftForearm[0],
-        pose.transforms.leftForearm[1],
-        pose.transforms.leftForearm[2]
-      );
-    }
+    applyBone(VRMHumanBoneName.LeftUpperArm, poseData.leftUpperArm);
+    applyBone(VRMHumanBoneName.LeftLowerArm, poseData.leftLowerArm);
+    applyBone(VRMHumanBoneName.RightUpperArm, poseData.rightUpperArm);
+    applyBone(VRMHumanBoneName.RightLowerArm, poseData.rightLowerArm);
 
-    // Right Arm
-    const rightUpperArm = humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightUpperArm);
-    if (rightUpperArm) {
-      rightUpperArm.rotation.set(
-        pose.transforms.rightUpperArm[0],
-        pose.transforms.rightUpperArm[1],
-        pose.transforms.rightUpperArm[2] + 1.15
-      );
-    }
-
-    const rightLowerArm = humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightLowerArm);
-    if (rightLowerArm) {
-      rightLowerArm.rotation.set(
-        pose.transforms.rightForearm[0],
-        pose.transforms.rightForearm[1],
-        pose.transforms.rightForearm[2]
-      );
-    }
-
-    // Left Leg
-    const leftUpperLeg = humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftUpperLeg);
-    if (leftUpperLeg) {
-      leftUpperLeg.rotation.set(
-        pose.transforms.leftUpperLeg[0],
-        pose.transforms.leftUpperLeg[1],
-        pose.transforms.leftUpperLeg[2]
-      );
-    }
-
-    // Right Leg
-    const rightUpperLeg = humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightUpperLeg);
-    if (rightUpperLeg) {
-      rightUpperLeg.rotation.set(
-        pose.transforms.rightUpperLeg[0],
-        pose.transforms.rightUpperLeg[1],
-        pose.transforms.rightUpperLeg[2]
-      );
-    }
+    applyBone(VRMHumanBoneName.LeftUpperLeg, poseData.leftUpperLeg);
+    applyBone(VRMHumanBoneName.LeftLowerLeg, poseData.leftLowerLeg);
+    applyBone(VRMHumanBoneName.RightUpperLeg, poseData.rightUpperLeg);
+    applyBone(VRMHumanBoneName.RightLowerLeg, poseData.rightLowerLeg);
   });
 
   return (
     <group ref={groupRef}>
-      {vrm && (
-        <>
-          <primitive object={vrm.scene} />
-
-          {/* 3D Head Accessories mounted in front */}
-          <group position={[0, 0.45, 0]}>
-            <AccessoriesRenderer
-              category="headAccessory"
-              itemId={equipped.headAccessory}
-              itemColors={itemColors}
-            />
-          </group>
-
-          {/* 3D Bags mounted near hip */}
-          <group position={[0, -0.15, 0]}>
-            <AccessoriesRenderer
-              category="bag"
-              itemId={equipped.bag}
-              itemColors={itemColors}
-            />
-          </group>
-
-          {/* 3D Neck Accessories */}
-          <group position={[0, 0.28, 0]}>
-            <AccessoriesRenderer
-              category="accessory"
-              itemId={equipped.accessory}
-              itemColors={itemColors}
-            />
-          </group>
-        </>
-      )}
+      {vrm && <primitive object={vrm.scene} />}
     </group>
   );
 }

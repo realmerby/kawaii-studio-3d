@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -225,14 +225,14 @@ const WARDROBE_THEMES: Record<string, { topColor?: string; bottomColor?: string;
   'top-sailor-blouse': { topColor: '#FFFFFF' },
   'top-gyaru-knit': { topColor: '#E9D5FF' },
   'top-ruffle-camisole': { topColor: '#FFE4E6' },
-  'bottom-pleated-skirt': { bottomColor: '#312E81' },
+  'bottom-pleated-skirt': { bottomColor: '#1E1B4B' },
   'bottom-frilly-rara': { bottomColor: '#F472B6' },
   'bottom-denim-shorts': { bottomColor: '#38BDF8' },
   'dress-maid-cafe': { topColor: '#FFFFFF', bottomColor: '#18181B' },
   'dress-y2k-slip': { topColor: '#FF80AB', bottomColor: '#FF80AB' },
-  'shoes-platform-mary-janes': { shoesColor: '#18181B' },
+  'shoes-platform-mary-janes': { shoesColor: '#111827' },
   'shoes-chunky-sneakers': { shoesColor: '#FFFFFF' },
-  'shoes-gyaru-boots': { shoesColor: '#78350F' },
+  'shoes-gyaru-boots': { shoesColor: '#92400E' },
 };
 
 export function VRMCharacter() {
@@ -252,50 +252,85 @@ export function VRMCharacter() {
   const neckAttachmentRef = useRef<THREE.Group>(null);
   const hipsAttachmentRef = useRef<THREE.Group>(null);
 
-  // Load VRM Model
+  // Load VRM Model with graceful error handling
   useEffect(() => {
+    let isCancelled = false;
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
 
     loader.load(
       '/models/anime_girl.vrm',
       (gltf) => {
-        const loadedVrm = gltf.userData.vrm as VRM;
-        if (loadedVrm) {
-          VRMUtils.removeUnnecessaryVertices(gltf.scene);
-          VRMUtils.combineSkeletons(gltf.scene);
-          VRMUtils.combineMorphs(loadedVrm);
+        if (isCancelled) return;
+        try {
+          const loadedVrm = gltf.userData.vrm as VRM;
+          if (loadedVrm) {
+            VRMUtils.removeUnnecessaryVertices(gltf.scene);
+            VRMUtils.combineSkeletons(gltf.scene);
+            VRMUtils.combineMorphs(loadedVrm);
 
-          // Face front directly
-          loadedVrm.scene.rotation.y = 0;
-          loadedVrm.scene.position.set(0, -0.85, 0);
+            // Face camera directly
+            loadedVrm.scene.rotation.y = 0;
+            loadedVrm.scene.position.set(0, -0.85, 0);
 
-          setVrm(loadedVrm);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[Kawaii 3D Debug] VRM Model successfully initialized:', loadedVrm);
+            }
+
+            setVrm(loadedVrm);
+          }
+        } catch (err) {
+          console.error('[Kawaii 3D Debug] Error processing VRM:', err);
         }
       },
       undefined,
       (error) => {
-        console.error('Error loading VRM:', error);
+        console.error('[Kawaii 3D Debug] Failed to load anime_girl.vrm:', error);
       }
     );
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
-  // Real-time Material & Wardrobe Customization Bridge
-  useEffect(() => {
+  // Central Character State -> 3D Material & Theme Synchronization
+  const applyMaterials = useCallback(() => {
     if (!vrm) return;
 
     const hairCol = (equipped.hair && itemColors[equipped.hair]) || colors.hairColor || '#FFA8CA';
     const eyeCol = colors.eyeColor || '#9333EA';
     const skinCol = colors.skinTone || '#FFF8F5';
 
-    // Derive clothing colors from selected wardrobe items or custom swatch
+    // Dress override
+    const isDressEquipped = !!equipped.dress;
+    const dressTheme = equipped.dress ? WARDROBE_THEMES[equipped.dress] : null;
+
     const topTheme = (equipped.top && WARDROBE_THEMES[equipped.top]?.topColor) || '#FF80AB';
     const bottomTheme = (equipped.bottom && WARDROBE_THEMES[equipped.bottom]?.bottomColor) || '#18181B';
     const shoesTheme = (equipped.shoes && WARDROBE_THEMES[equipped.shoes]?.shoesColor) || '#18181B';
 
-    const topCol = (equipped.top && itemColors[equipped.top]) || topTheme;
-    const bottomCol = (equipped.bottom && itemColors[equipped.bottom]) || bottomTheme;
+    const topCol = isDressEquipped
+      ? (dressTheme?.topColor || '#FFFFFF')
+      : (equipped.top && itemColors[equipped.top]) || topTheme;
+
+    const bottomCol = isDressEquipped
+      ? (dressTheme?.bottomColor || '#18181B')
+      : (equipped.bottom && itemColors[equipped.bottom]) || bottomTheme;
+
     const shoesCol = (equipped.shoes && itemColors[equipped.shoes]) || shoesTheme;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Kawaii 3D Debug] Syncing materials to 3D scene:', {
+        hair: hairCol,
+        eye: eyeCol,
+        skin: skinCol,
+        top: topCol,
+        bottom: bottomCol,
+        shoes: shoesCol,
+        isDress: isDressEquipped,
+      });
+    }
 
     vrm.scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -328,7 +363,7 @@ export function VRMCharacter() {
             }
           }
 
-          // Top Clothing (Cardigan, Tops, Shirt, Blouse)
+          // Top Clothing
           if (
             matName.includes('top') ||
             matName.includes('shirt') ||
@@ -366,6 +401,10 @@ export function VRMCharacter() {
       }
     });
   }, [vrm, equipped, itemColors, colors]);
+
+  useEffect(() => {
+    applyMaterials();
+  }, [applyMaterials]);
 
   // Real-time Smooth Bone Animation, Head Tracking & Spring Physics
   useFrame(({ clock }, delta) => {

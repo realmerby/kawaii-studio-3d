@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Check, Heart } from 'lucide-react';
+import { Check, Heart, Sparkles } from 'lucide-react';
 import { ClothingItem, ItemRarity } from '@/types/character';
 import { useGameStore } from '@/lib/store';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -49,8 +49,11 @@ export function ItemCard({ item }: ItemCardProps) {
   const isFav = favorites.includes(item.id);
   const currentColor = itemColors[item.id] || item.defaultColor;
   const rarity = RARITY_STYLES[item.rarity] || RARITY_STYLES.common;
+  const isDisabled = !!item.disabled;
 
   const handleClick = () => {
+    if (isDisabled) return;
+
     if (!isEquipped) {
       if (item.rarity === 'legendary' || item.rarity === 'epic') {
         playSparkle();
@@ -65,6 +68,7 @@ export function ItemCard({ item }: ItemCardProps) {
 
   const handleColorChange = (e: React.MouseEvent, colorHex: string) => {
     e.stopPropagation();
+    if (isDisabled) return;
     playPop();
     setItemColor(item.id, colorHex);
     if (!isEquipped) {
@@ -74,6 +78,7 @@ export function ItemCard({ item }: ItemCardProps) {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isDisabled) return;
     playHeart();
     toggleFavorite(item.id);
   };
@@ -81,40 +86,56 @@ export function ItemCard({ item }: ItemCardProps) {
   return (
     <div
       onClick={handleClick}
-      className={`group relative flex flex-col p-3 rounded-2xl cursor-pointer transition-all duration-200 select-none bg-white/90 backdrop-blur-sm shadow-xs hover:shadow-md ${
-        isEquipped
-          ? 'border-2 border-pink-500 shadow-pink-200/80 shadow-md ring-2 ring-pink-300/40 transform -translate-y-0.5'
-          : `border border-pink-100/80 hover:border-pink-300 ${rarity.bg}`
+      className={`group relative flex flex-col p-3 rounded-2xl transition-all duration-200 select-none bg-white/90 backdrop-blur-sm shadow-xs ${
+        isDisabled
+          ? 'opacity-65 cursor-not-allowed border border-pink-100/60'
+          : isEquipped
+          ? 'cursor-pointer border-2 border-pink-500 shadow-pink-200/80 shadow-md ring-2 ring-pink-300/40 transform -translate-y-0.5'
+          : `cursor-pointer border border-pink-100/80 hover:border-pink-300 hover:shadow-md ${rarity.bg}`
       }`}
     >
       {/* Active Checkmark Pill */}
-      {isEquipped && (
+      {isEquipped && !isDisabled && (
         <div className="absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-md animate-bounce-subtle">
           <Check className="w-3.5 h-3.5 stroke-[3]" />
         </div>
       )}
 
+      {/* Disabled / Coming Soon Status Pill */}
+      {isDisabled && (
+        <div className="absolute -top-2 -right-2 z-10 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-400 to-purple-400 text-white text-[9px] font-bold flex items-center gap-1 shadow-sm">
+          <Sparkles className="w-2.5 h-2.5" />
+          <span>{item.statusBadge || 'Yakında'}</span>
+        </div>
+      )}
+
       {/* Favorite Heart Button */}
-      <button
-        onClick={handleFavoriteClick}
-        className={`absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-xs shadow-xs transition-transform active:scale-125 hover:scale-110 ${
-          isFav ? 'text-pink-500' : 'text-gray-300 hover:text-pink-400'
-        }`}
-        title={isFav ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
-      >
-        <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-pink-500 text-pink-500' : ''}`} />
-      </button>
+      {!isDisabled && (
+        <button
+          onClick={handleFavoriteClick}
+          className={`absolute top-2 left-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-xs shadow-xs transition-transform active:scale-125 hover:scale-110 ${
+            isFav ? 'text-pink-500' : 'text-gray-300 hover:text-pink-400'
+          }`}
+          title={isFav ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
+        >
+          <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-pink-500 text-pink-500' : ''}`} />
+        </button>
+      )}
 
       {/* Item Icon / Visual Banner */}
       <div
         className={`w-full aspect-square rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center text-4xl shadow-inner relative overflow-hidden mb-2`}
       >
-        <span className="transform transition-transform duration-200 group-hover:scale-110">
+        <span
+          className={`transform transition-transform duration-200 ${
+            !isDisabled ? 'group-hover:scale-110' : 'opacity-80'
+          }`}
+        >
           {item.icon}
         </span>
 
         {/* Selected Color Indicator Dot */}
-        {currentColor && (
+        {currentColor && !isDisabled && (
           <div
             className="absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full border-2 border-white shadow-sm"
             style={{ backgroundColor: currentColor }}
@@ -131,14 +152,18 @@ export function ItemCard({ item }: ItemCardProps) {
 
       <div className="flex items-center justify-between mt-auto pt-1">
         <span
-          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${rarity.badge}`}
+          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${
+            isDisabled
+              ? 'bg-gray-100 text-gray-500 border-gray-200'
+              : rarity.badge
+          }`}
         >
-          {rarity.text}
+          {isDisabled ? (item.statusBadge || 'Yakında') : rarity.text}
         </span>
       </div>
 
       {/* Available Color Swatches */}
-      {item.availableColors && item.availableColors.length > 1 && (
+      {!isDisabled && item.availableColors && item.availableColors.length > 1 && (
         <div
           className="flex items-center gap-1 mt-2 pt-2 border-t border-pink-50 overflow-x-auto no-scrollbar"
           onClick={(e) => e.stopPropagation()}

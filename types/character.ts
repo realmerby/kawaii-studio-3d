@@ -64,6 +64,8 @@ export interface ClothingItem {
   attachment?: AttachmentTransform;
   hidesCategories?: ClothingCategory[];
   compatibleWith?: ClothingCategory[];
+  disabled?: boolean;
+  statusBadge?: string;
 }
 
 export type EyeStyle = 'sparkle' | 'cateye' | 'soft' | 'heart';

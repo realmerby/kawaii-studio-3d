@@ -8,7 +8,6 @@ import { VRM, VRMLoaderPlugin, VRMUtils, VRMHumanBoneName } from '@pixiv/three-v
 import { useGameStore } from '@/lib/store';
 import { getItemById } from '@/data/clothing';
 import { getClothingPatternTexture } from '@/lib/textureEngine';
-import { HairRenderer } from './HairRenderer';
 import { AccessoriesRenderer } from './AccessoriesRenderer';
 
 export interface BonePoseConfig {
@@ -334,22 +333,13 @@ export function VRMCharacter() {
     };
   }, []);
 
-  // Central Character State -> 3D Material, Pattern & Hair Synchronization
+  // Central Character State -> 3D Material, Pattern & Hair Color Synchronization
   const applyMaterials = useCallback(() => {
     if (!vrm) return;
 
     const hairCol = (equipped.hair && itemColors[equipped.hair]) || colors.hairColor || '#FFA8CA';
     const eyeCol = colors.eyeColor || '#9333EA';
     const skinCol = colors.skinTone || '#FFF8F5';
-
-    // True Hair Replacement Logic:
-    // If an external hair model is equipped (twintails, bobcut, himecut), completely hide the VRM model's built-in hair.
-    // If gyaruwaves or default is equipped, show the VRM model's built-in hair with dynamic colors.
-    const isExternalHair = equipped.hair !== 'hair-gyaruwaves' && equipped.hair !== null;
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Hair Engine] Current: ${equipped.hair} | Mode: ${isExternalHair ? 'external' : 'base'} | Base VRM Hair: ${!isExternalHair}`);
-    }
 
     // Dress override & compatibility
     const isDressEquipped = !!equipped.dress;
@@ -397,21 +387,26 @@ export function VRMCharacter() {
         const meshName = (mesh.name || '').toLowerCase();
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
-        // 1. BASE VRM HAIR MESH VISIBILITY & COLOR CONTROL
+        // 1. AUTHENTIC VRM HAIR MESH (Always visible, perfectly rigged with 12 spring bones)
         if (meshName === 'hair' || meshName.includes('hair')) {
-          mesh.visible = !isExternalHair;
-          if (mesh.visible) {
-            materials.forEach((mat) => {
-              if (mat && 'color' in mat && mat.color instanceof THREE.Color) {
-                mat.color.set(hairCol);
-              }
-            });
-          }
+          mesh.visible = true;
+          materials.forEach((mat) => {
+            if (mat && 'color' in mat && mat.color instanceof THREE.Color) {
+              mat.color.set(hairCol);
+            }
+          });
         }
 
         materials.forEach((mat) => {
           if (!mat) return;
           const matName = (mat.name || '').toLowerCase();
+
+          // Hair Material
+          if (matName.includes('hair')) {
+            if ('color' in mat && mat.color instanceof THREE.Color) {
+              mat.color.set(hairCol);
+            }
+          }
 
           // Eye & Iris Material
           if (matName.includes('eye') || matName.includes('iris') || meshName.includes('eye')) {
@@ -599,17 +594,8 @@ export function VRMCharacter() {
         <>
           <primitive object={vrm.scene} />
 
-          {/* 1. Head Attachments (HairRoot + Head Accessories + Glasses + Earrings) */}
+          {/* 1. Head Attachments (Head Accessories + Glasses + Earrings) */}
           <group ref={headAttachmentRef}>
-            {/* Dedicated Single-Instance Hair Container */}
-            <group name="HairRoot">
-              <HairRenderer
-                hairId={equipped.hair}
-                colors={colors}
-                itemColor={equipped.hair ? itemColors[equipped.hair] : undefined}
-              />
-            </group>
-
             {/* Head Accessory (Bow, Ears, Halo, Beret) */}
             <AccessoriesRenderer
               category="headAccessory"

@@ -10,8 +10,8 @@ import { ALL_ITEMS, getItemById, ITEMS_BY_CATEGORY } from '@/data/clothing';
 import { FULL_CHARACTER_PRESETS, OUTFIT_PRESETS } from '@/data/presets';
 import { POSES } from '@/data/poses/posesList';
 
-const STORAGE_KEY = 'kawaii_studio_save_v2';
-const FAVORITES_KEY = 'kawaii_studio_favorites_v2';
+const STORAGE_KEY = 'kawaii_studio_save_v3';
+const FAVORITES_KEY = 'kawaii_studio_favorites_v3';
 
 export interface GameState {
   // Character clothing & items

@@ -37,6 +37,13 @@ export const CATEGORIES: CategoryInfo[] = [
     description: 'Lolita ve gyaru stili tek parça elbiseler',
   },
   {
+    id: 'outerwear',
+    name: 'Outerwear',
+    nameTr: 'Dış Giyim',
+    icon: '🧥',
+    description: 'Hırkalar, ceketler ve kabanlar',
+  },
+  {
     id: 'socks',
     name: 'Socks',
     nameTr: 'Çoraplar',

@@ -3,6 +3,7 @@ import { HAIRS } from './hairs';
 import { TOPS } from './tops';
 import { BOTTOMS } from './bottoms';
 import { DRESSES } from './dresses';
+import { OUTERWEARS } from './outerwears';
 import { SHOES } from './shoes';
 import { SOCKS } from './socks';
 import { ACCESSORIES } from './accessories';
@@ -14,6 +15,7 @@ export {
   TOPS,
   BOTTOMS,
   DRESSES,
+  OUTERWEARS,
   SHOES,
   SOCKS,
   ACCESSORIES,
@@ -26,6 +28,7 @@ export const ALL_ITEMS: ClothingItem[] = [
   ...TOPS,
   ...BOTTOMS,
   ...DRESSES,
+  ...OUTERWEARS,
   ...SHOES,
   ...SOCKS,
   ...ACCESSORIES,
@@ -39,6 +42,7 @@ export const ITEMS_BY_CATEGORY: Record<ClothingCategory, ClothingItem[]> = {
   top: TOPS,
   bottom: BOTTOMS,
   dress: DRESSES,
+  outerwear: OUTERWEARS,
   socks: SOCKS,
   shoes: SHOES,
   accessory: ACCESSORIES,

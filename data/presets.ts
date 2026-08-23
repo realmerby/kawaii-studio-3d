@@ -15,7 +15,7 @@ export interface FullCharacterPreset {
   poseId: string;
   colors: CharacterColors;
   face: CharacterFaceFeatures;
-  equipped: Record<ClothingCategory, string | null>;
+  equipped: Partial<Record<ClothingCategory, string | null>>;
 }
 
 // 2. OUTFIT-ONLY PRESET (Changes only the clothes/accessories without altering face or hair)
@@ -26,7 +26,7 @@ export interface OutfitOnlyPreset {
   icon: string;
   badge: string;
   description: string;
-  equipped: Record<ClothingCategory, string | null>;
+  equipped: Partial<Record<ClothingCategory, string | null>>;
 }
 
 export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
@@ -59,6 +59,7 @@ export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
       top: 'top-bunny-hoodie',
       bottom: 'bottom-pleated-skirt',
       dress: null,
+      outerwear: null,
       socks: 'socks-thigh-high-striped',
       shoes: 'shoes-platform-mary-janes',
       accessory: 'acc-ribbon-choker',
@@ -94,7 +95,8 @@ export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
       top: null,
       bottom: null,
       dress: 'dress-y2k-slip',
-      socks: 'socks-fishnet-gyaru',
+      outerwear: null,
+      socks: 'socks-fishnet-kawaii',
       shoes: 'shoes-gyaru-boots',
       accessory: 'acc-heart-glasses',
       bag: 'bag-pastel-tote',
@@ -129,7 +131,8 @@ export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
       top: 'top-ruffle-camisole',
       bottom: 'bottom-frilly-rara',
       dress: null,
-      socks: 'socks-frilly-lace-ankle',
+      outerwear: null,
+      socks: 'socks-lace-frill',
       shoes: 'shoes-chunky-sneakers',
       accessory: 'acc-gyaru-warmers',
       bag: 'bag-teddy-backpack',
@@ -164,6 +167,7 @@ export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
       top: null,
       bottom: null,
       dress: 'dress-maid-cafe',
+      outerwear: null,
       socks: 'socks-thigh-high-striped',
       shoes: 'shoes-platform-mary-janes',
       accessory: 'acc-ribbon-choker',
@@ -199,6 +203,7 @@ export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
       top: 'top-sailor-blouse',
       bottom: 'bottom-pleated-skirt',
       dress: null,
+      outerwear: null,
       socks: 'socks-thigh-high-striped',
       shoes: 'shoes-chunky-sneakers',
       accessory: 'acc-ribbon-choker',
@@ -234,7 +239,8 @@ export const FULL_CHARACTER_PRESETS: FullCharacterPreset[] = [
       top: 'top-gyaru-knit',
       bottom: 'bottom-denim-shorts',
       dress: null,
-      socks: 'socks-fishnet-gyaru',
+      outerwear: null,
+      socks: 'socks-fishnet-kawaii',
       shoes: 'shoes-gyaru-boots',
       accessory: 'acc-heart-glasses',
       bag: 'bag-heart-crossbody',
@@ -256,6 +262,7 @@ export const OUTFIT_PRESETS: OutfitOnlyPreset[] = [
       top: 'top-sailor-blouse',
       bottom: 'bottom-pleated-skirt',
       dress: null,
+      outerwear: null,
       socks: 'socks-thigh-high-striped',
       shoes: 'shoes-platform-mary-janes',
       accessory: 'acc-ribbon-choker',
@@ -275,7 +282,8 @@ export const OUTFIT_PRESETS: OutfitOnlyPreset[] = [
       top: 'top-bunny-hoodie',
       bottom: 'bottom-pleated-skirt',
       dress: null,
-      socks: 'socks-frilly-lace-ankle',
+      outerwear: null,
+      socks: 'socks-lace-frill',
       shoes: 'shoes-chunky-sneakers',
       accessory: 'acc-ribbon-choker',
       bag: 'bag-teddy-backpack',
@@ -294,7 +302,8 @@ export const OUTFIT_PRESETS: OutfitOnlyPreset[] = [
       top: null,
       bottom: null,
       dress: 'dress-y2k-slip',
-      socks: 'socks-fishnet-gyaru',
+      outerwear: null,
+      socks: 'socks-fishnet-kawaii',
       shoes: 'shoes-gyaru-boots',
       accessory: 'acc-heart-glasses',
       bag: 'bag-heart-crossbody',
@@ -313,6 +322,7 @@ export const OUTFIT_PRESETS: OutfitOnlyPreset[] = [
       top: 'top-gyaru-knit',
       bottom: 'bottom-denim-shorts',
       dress: null,
+      outerwear: null,
       socks: 'socks-thigh-high-striped',
       shoes: 'shoes-gyaru-boots',
       accessory: 'acc-gyaru-warmers',
@@ -332,6 +342,7 @@ export const OUTFIT_PRESETS: OutfitOnlyPreset[] = [
       top: null,
       bottom: null,
       dress: 'dress-maid-cafe',
+      outerwear: null,
       socks: 'socks-thigh-high-striped',
       shoes: 'shoes-platform-mary-janes',
       accessory: 'acc-ribbon-choker',
@@ -351,7 +362,8 @@ export const OUTFIT_PRESETS: OutfitOnlyPreset[] = [
       top: 'top-ruffle-camisole',
       bottom: 'bottom-frilly-rara',
       dress: null,
-      socks: 'socks-frilly-lace-ankle',
+      outerwear: null,
+      socks: 'socks-lace-frill',
       shoes: 'shoes-chunky-sneakers',
       accessory: 'acc-heart-glasses',
       bag: 'bag-pastel-tote',

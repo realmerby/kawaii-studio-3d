@@ -91,6 +91,7 @@ const DEFAULT_EQUIPPED: Record<ClothingCategory, string | null> = {
   top: 'top-ruffle-camisole',
   bottom: 'bottom-frilly-rara',
   dress: null,
+  outerwear: null,
   socks: 'socks-thigh-high-striped',
   shoes: 'shoes-platform-mary-janes',
   accessory: 'acc-ribbon-choker',
@@ -311,11 +312,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const preset = FULL_CHARACTER_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
 
+    const fullEquipped: Record<ClothingCategory, string | null> = {
+      ...DEFAULT_EQUIPPED,
+      ...preset.equipped,
+    };
+
     const updated = {
-      equipped: { ...preset.equipped },
+      equipped: fullEquipped,
       hiddenBackup: {
-        top: preset.equipped.top || state.hiddenBackup.top,
-        bottom: preset.equipped.bottom || state.hiddenBackup.bottom,
+        top: fullEquipped.top || state.hiddenBackup.top,
+        bottom: fullEquipped.bottom || state.hiddenBackup.bottom,
       },
       colors: { ...preset.colors },
       faceFeatures: { ...preset.face },
@@ -331,21 +337,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const preset = OUTFIT_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
 
+    const fullEquipped: Record<ClothingCategory, string | null> = {
+      ...state.equipped,
+      ...preset.equipped,
+    };
+
     const updated = {
-      equipped: {
-        ...state.equipped,
-        top: preset.equipped.top,
-        bottom: preset.equipped.bottom,
-        dress: preset.equipped.dress,
-        socks: preset.equipped.socks,
-        shoes: preset.equipped.shoes,
-        accessory: preset.equipped.accessory,
-        bag: preset.equipped.bag,
-        headAccessory: preset.equipped.headAccessory,
-      },
+      equipped: fullEquipped,
       hiddenBackup: {
-        top: preset.equipped.top || state.hiddenBackup.top,
-        bottom: preset.equipped.bottom || state.hiddenBackup.bottom,
+        top: fullEquipped.top || state.hiddenBackup.top,
+        bottom: fullEquipped.bottom || state.hiddenBackup.bottom,
       },
       sparkleCount: state.sparkleCount + 1,
     };
@@ -366,6 +367,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       top: null,
       bottom: null,
       dress: null,
+      outerwear: Math.random() > 0.6
+        ? ITEMS_BY_CATEGORY.outerwear[Math.floor(Math.random() * ITEMS_BY_CATEGORY.outerwear.length)].id
+        : null,
       socks: ITEMS_BY_CATEGORY.socks[Math.floor(Math.random() * ITEMS_BY_CATEGORY.socks.length)].id,
       shoes: ITEMS_BY_CATEGORY.shoes[Math.floor(Math.random() * ITEMS_BY_CATEGORY.shoes.length)].id,
       accessory: Math.random() > 0.3
@@ -429,6 +433,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         set((state) => ({
           ...state,
           ...parsed,
+          equipped: {
+            ...DEFAULT_EQUIPPED,
+            ...parsed.equipped,
+          },
         }));
       }
       if (favs) {

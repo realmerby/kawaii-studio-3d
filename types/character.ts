@@ -4,12 +4,43 @@ export type ClothingCategory =
   | 'top'
   | 'bottom'
   | 'dress'
+  | 'outerwear'
   | 'socks'
   | 'shoes'
   | 'bag'
   | 'accessory';
 
 export type ItemRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export type ClothingItemType = 'mesh' | 'reskin';
+
+export type ClothingPattern =
+  | 'solid'
+  | 'stripes'
+  | 'check'
+  | 'heart'
+  | 'lace'
+  | 'polka'
+  | 'denim'
+  | 'sailor';
+
+export type AttachmentAnchor =
+  | 'head'
+  | 'face'
+  | 'neck'
+  | 'chest'
+  | 'hips'
+  | 'leftHand'
+  | 'rightHand'
+  | 'back'
+  | 'waist';
+
+export interface AttachmentTransform {
+  anchor: AttachmentAnchor;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: [number, number, number];
+}
 
 export interface ClothingItem {
   id: string;
@@ -24,7 +55,15 @@ export interface ClothingItem {
   defaultColor: string;
   availableColors?: string[];
   tags?: string[];
+  itemType?: ClothingItemType;
+  pattern?: ClothingPattern;
+  patternSecondaryColor?: string;
+  layer?: number;
+  meshAssetUrl?: string;
+  compatibleSkeleton?: string;
+  attachment?: AttachmentTransform;
   hidesCategories?: ClothingCategory[];
+  compatibleWith?: ClothingCategory[];
 }
 
 export type EyeStyle = 'sparkle' | 'cateye' | 'soft' | 'heart';

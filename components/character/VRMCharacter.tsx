@@ -6,6 +6,8 @@ import { useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils, VRMHumanBoneName } from '@pixiv/three-vrm';
 import { useGameStore } from '@/lib/store';
+import { getItemById } from '@/data/clothing';
+import { getClothingPatternTexture } from '@/lib/textureEngine';
 import { HairRenderer } from './HairRenderer';
 import { AccessoriesRenderer } from './AccessoriesRenderer';
 
@@ -273,22 +275,6 @@ const VRM_POSES: Record<string, BonePoseConfig> = {
   },
 };
 
-// Clothing color palette mapping for wardrobe items
-const WARDROBE_THEMES: Record<string, { topColor?: string; bottomColor?: string; shoesColor?: string }> = {
-  'top-bunny-hoodie': { topColor: '#FFB6C1' },
-  'top-sailor-blouse': { topColor: '#FFFFFF' },
-  'top-gyaru-knit': { topColor: '#E9D5FF' },
-  'top-ruffle-camisole': { topColor: '#FFE4E6' },
-  'bottom-pleated-skirt': { bottomColor: '#1E1B4B' },
-  'bottom-frilly-rara': { bottomColor: '#F472B6' },
-  'bottom-denim-shorts': { bottomColor: '#38BDF8' },
-  'dress-maid-cafe': { topColor: '#FFFFFF', bottomColor: '#18181B' },
-  'dress-y2k-slip': { topColor: '#FF80AB', bottomColor: '#FF80AB' },
-  'shoes-platform-mary-janes': { shoesColor: '#111827' },
-  'shoes-chunky-sneakers': { shoesColor: '#FFFFFF' },
-  'shoes-gyaru-boots': { shoesColor: '#92400E' },
-};
-
 export function VRMCharacter() {
   const [vrm, setVrm] = useState<VRM | null>(null);
   const {
@@ -348,7 +334,7 @@ export function VRMCharacter() {
     };
   }, []);
 
-  // Central Character State -> 3D Material & Theme Synchronization
+  // Central Character State -> 3D Material, Pattern & Theme Synchronization
   const applyMaterials = useCallback(() => {
     if (!vrm) return;
 
@@ -356,23 +342,46 @@ export function VRMCharacter() {
     const eyeCol = colors.eyeColor || '#9333EA';
     const skinCol = colors.skinTone || '#FFF8F5';
 
-    // Dress override
+    // Dress override & compatibility
     const isDressEquipped = !!equipped.dress;
-    const dressTheme = equipped.dress ? WARDROBE_THEMES[equipped.dress] : null;
+    const dressItem = equipped.dress ? getItemById(equipped.dress) : undefined;
+    const topItem = equipped.top ? getItemById(equipped.top) : undefined;
+    const bottomItem = equipped.bottom ? getItemById(equipped.bottom) : undefined;
+    const shoesItem = equipped.shoes ? getItemById(equipped.shoes) : undefined;
+    const socksItem = equipped.socks ? getItemById(equipped.socks) : undefined;
+    const outerItem = equipped.outerwear ? getItemById(equipped.outerwear) : undefined;
 
-    const topTheme = (equipped.top && WARDROBE_THEMES[equipped.top]?.topColor) || '#FF80AB';
-    const bottomTheme = (equipped.bottom && WARDROBE_THEMES[equipped.bottom]?.bottomColor) || '#18181B';
-    const shoesTheme = (equipped.shoes && WARDROBE_THEMES[equipped.shoes]?.shoesColor) || '#18181B';
+    // Resolve active primary and secondary colors
+    const topPrimary = isDressEquipped
+      ? (equipped.dress && itemColors[equipped.dress]) || dressItem?.defaultColor || '#18181B'
+      : (equipped.top && itemColors[equipped.top]) || topItem?.defaultColor || '#FF80AB';
 
-    const topCol = isDressEquipped
-      ? (dressTheme?.topColor || '#FFFFFF')
-      : (equipped.top && itemColors[equipped.top]) || topTheme;
+    const topSecondary = isDressEquipped
+      ? dressItem?.patternSecondaryColor || '#FFFFFF'
+      : topItem?.patternSecondaryColor || '#FFFFFF';
 
-    const bottomCol = isDressEquipped
-      ? (dressTheme?.bottomColor || '#18181B')
-      : (equipped.bottom && itemColors[equipped.bottom]) || bottomTheme;
+    const topPattern = isDressEquipped
+      ? dressItem?.pattern || 'solid'
+      : topItem?.pattern || 'solid';
 
-    const shoesCol = (equipped.shoes && itemColors[equipped.shoes]) || shoesTheme;
+    const bottomPrimary = isDressEquipped
+      ? (equipped.dress && itemColors[equipped.dress]) || dressItem?.defaultColor || '#18181B'
+      : (equipped.bottom && itemColors[equipped.bottom]) || bottomItem?.defaultColor || '#18181B';
+
+    const bottomSecondary = isDressEquipped
+      ? dressItem?.patternSecondaryColor || '#FFFFFF'
+      : bottomItem?.patternSecondaryColor || '#FFFFFF';
+
+    const bottomPattern = isDressEquipped
+      ? dressItem?.pattern || 'solid'
+      : bottomItem?.pattern || 'solid';
+
+    const shoesCol = (equipped.shoes && itemColors[equipped.shoes]) || shoesItem?.defaultColor || '#111827';
+    const outerCol = (equipped.outerwear && itemColors[equipped.outerwear]) || outerItem?.defaultColor || '#FDE68A';
+
+    // Generate dynamic pattern textures
+    const topTexture = getClothingPatternTexture(topPattern, topPrimary, topSecondary);
+    const bottomTexture = getClothingPatternTexture(bottomPattern, bottomPrimary, bottomSecondary);
 
     vrm.scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -405,19 +414,28 @@ export function VRMCharacter() {
             }
           }
 
+          // Outerwear / Cardigan (if mesh has cardigan/jacket component)
+          if (matName.includes('cardigan') || matName.includes('jacket') || matName.includes('outer')) {
+            if ('color' in mat && mat.color instanceof THREE.Color) {
+              mat.color.set(outerCol);
+            }
+          }
+
           // Top Clothing
           if (
             matName.includes('top') ||
             matName.includes('shirt') ||
             matName.includes('cloth') ||
-            matName.includes('jacket') ||
-            matName.includes('cardigan') ||
             meshName.includes('top') ||
             meshName.includes('cloth')
           ) {
-            if ('color' in mat && mat.color instanceof THREE.Color) {
-              mat.color.set(topCol);
+            if ('map' in mat) {
+              (mat as THREE.MeshStandardMaterial).map = topTexture;
             }
+            if ('color' in mat && mat.color instanceof THREE.Color) {
+              mat.color.set(topPrimary);
+            }
+            mat.needsUpdate = true;
           }
 
           // Bottom / Skirt / Pants
@@ -428,9 +446,13 @@ export function VRMCharacter() {
             meshName.includes('bottom') ||
             meshName.includes('skirt')
           ) {
-            if ('color' in mat && mat.color instanceof THREE.Color) {
-              mat.color.set(bottomCol);
+            if ('map' in mat) {
+              (mat as THREE.MeshStandardMaterial).map = bottomTexture;
             }
+            if ('color' in mat && mat.color instanceof THREE.Color) {
+              mat.color.set(bottomPrimary);
+            }
+            mat.needsUpdate = true;
           }
 
           // Shoes / Footwear

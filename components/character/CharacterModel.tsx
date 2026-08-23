@@ -17,26 +17,26 @@ export function CharacterModel() {
   });
 
   return (
-    <group ref={groupRef} position={[0, -0.35, 0]}>
+    <group ref={groupRef} position={[0, 0, 0]}>
       {/* Authentic VRoid / CustomCast 3D Anime Character */}
       <VRMCharacter />
 
       {/* Cute Kawaii Pedestal / Soft Stage Floor */}
-      <group position={[0, -0.98, 0]}>
+      <group position={[0, -0.85, 0]}>
         {/* Soft Stage Cylinder */}
-        <mesh position={[0, -0.05, 0]}>
-          <cylinderGeometry args={[1.1, 1.2, 0.08, 32]} />
+        <mesh position={[0, -0.04, 0]}>
+          <cylinderGeometry args={[1.0, 1.1, 0.08, 32]} />
           <meshStandardMaterial color="#FFF0F5" roughness={0.6} />
         </mesh>
         {/* Pastel Ring Outline */}
-        <mesh position={[0, -0.01, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.05, 1.15, 32]} />
+        <mesh position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.92, 0.98, 32]} />
           <meshStandardMaterial color="#FFB6C1" roughness={0.4} />
         </mesh>
         {/* Soft Ground Contact Shadow */}
         <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.7, 32]} />
-          <meshBasicMaterial color="#4A0E4E" transparent opacity={0.12} />
+          <circleGeometry args={[0.65, 32]} />
+          <meshBasicMaterial color="#4A0E4E" transparent opacity={0.15} />
         </mesh>
       </group>
     </group>

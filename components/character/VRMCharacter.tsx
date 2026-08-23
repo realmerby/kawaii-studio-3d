@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils, VRMHumanBoneName } from '@pixiv/three-vrm';
 import { useGameStore } from '@/lib/store';
 import { getItemById } from '@/data/clothing';
-import { getClothingPatternTexture } from '@/lib/textureEngine';
+import { getGarmentTexture } from '@/lib/textureEngine';
 import { AccessoriesRenderer } from './AccessoriesRenderer';
 
 export interface BonePoseConfig {
@@ -333,7 +333,7 @@ export function VRMCharacter() {
     };
   }, []);
 
-  // Central Character State -> 3D Material, Pattern & Hair Color Synchronization
+  // Central Character State -> 3D Material, Texture & Hair Color Synchronization
   const applyMaterials = useCallback(() => {
     if (!vrm) return;
 
@@ -358,10 +358,6 @@ export function VRMCharacter() {
       ? dressItem?.patternSecondaryColor || '#FFFFFF'
       : topItem?.patternSecondaryColor || '#FFFFFF';
 
-    const topPattern = isDressEquipped
-      ? dressItem?.pattern || 'solid'
-      : topItem?.pattern || 'solid';
-
     const bottomPrimary = isDressEquipped
       ? (equipped.dress && itemColors[equipped.dress]) || dressItem?.defaultColor || '#18181B'
       : (equipped.bottom && itemColors[equipped.bottom]) || bottomItem?.defaultColor || '#18181B';
@@ -370,16 +366,19 @@ export function VRMCharacter() {
       ? dressItem?.patternSecondaryColor || '#FFFFFF'
       : bottomItem?.patternSecondaryColor || '#FFFFFF';
 
-    const bottomPattern = isDressEquipped
-      ? dressItem?.pattern || 'solid'
-      : bottomItem?.pattern || 'solid';
-
     const shoesCol = (equipped.shoes && itemColors[equipped.shoes]) || shoesItem?.defaultColor || '#111827';
     const outerCol = (equipped.outerwear && itemColors[equipped.outerwear]) || outerItem?.defaultColor || '#FDE68A';
 
-    // Generate dynamic pattern textures
-    const topTexture = getClothingPatternTexture(topPattern, topPrimary, topSecondary);
-    const bottomTexture = getClothingPatternTexture(bottomPattern, bottomPrimary, bottomSecondary);
+    // Generate high-definition tailored garment textures with collars, buttons, stitches, and pleats
+    const activeTopId = isDressEquipped ? (equipped.dress || 'dress-maid-cafe') : (equipped.top || 'top-ruffle-camisole');
+    const activeBottomId = isDressEquipped ? (equipped.dress || 'dress-maid-cafe') : (equipped.bottom || 'bottom-frilly-rara');
+    const activeShoesId = equipped.shoes || 'shoes-platform-mary-janes';
+    const activeOuterId = equipped.outerwear || 'outer-pastel-cardigan';
+
+    const topTexture = getGarmentTexture(activeTopId, topPrimary, topSecondary);
+    const bottomTexture = getGarmentTexture(activeBottomId, bottomPrimary, bottomSecondary);
+    const shoesTexture = getGarmentTexture(activeShoesId, shoesCol, '#FFFFFF');
+    const outerTexture = getGarmentTexture(activeOuterId, outerCol, '#FFFFFF');
 
     vrm.scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -424,9 +423,13 @@ export function VRMCharacter() {
 
           // Outerwear / Cardigan
           if (matName.includes('cardigan') || matName.includes('jacket') || matName.includes('outer')) {
+            if ('map' in mat) {
+              (mat as THREE.MeshStandardMaterial).map = outerTexture;
+            }
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(outerCol);
             }
+            mat.needsUpdate = true;
           }
 
           // Top Clothing
@@ -465,9 +468,13 @@ export function VRMCharacter() {
 
           // Shoes / Footwear
           if (matName.includes('shoe') || matName.includes('foot') || meshName.includes('shoe')) {
+            if ('map' in mat) {
+              (mat as THREE.MeshStandardMaterial).map = shoesTexture;
+            }
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(shoesCol);
             }
+            mat.needsUpdate = true;
           }
         });
       }

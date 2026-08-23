@@ -9,37 +9,46 @@ import { useGameStore } from '@/lib/store';
 import { HairRenderer } from './HairRenderer';
 import { AccessoriesRenderer } from './AccessoriesRenderer';
 
-// Accurate VRM Humanoid Bone Transforms for each of the 12 Anime Poses
-const VRM_POSES: Record<
-  string,
-  {
-    head?: [number, number, number];
-    chest?: [number, number, number];
-    hips?: [number, number, number];
-    leftUpperArm?: [number, number, number];
-    leftLowerArm?: [number, number, number];
-    rightUpperArm?: [number, number, number];
-    rightLowerArm?: [number, number, number];
-    leftUpperLeg?: [number, number, number];
-    leftLowerLeg?: [number, number, number];
-    rightUpperLeg?: [number, number, number];
-    rightLowerLeg?: [number, number, number];
-    bodyOffsetY?: number;
-  }
-> = {
-  // 1. Forehead Salute (Sevimli Alın Selamı - Like the Reference Image!)
+export interface BonePoseConfig {
+  head: [number, number, number];
+  neck?: [number, number, number];
+  chest: [number, number, number];
+  spine?: [number, number, number];
+  hips: [number, number, number];
+  leftUpperArm: [number, number, number];
+  leftLowerArm: [number, number, number];
+  leftHand?: [number, number, number];
+  rightUpperArm: [number, number, number];
+  rightLowerArm: [number, number, number];
+  rightHand?: [number, number, number];
+  leftUpperLeg: [number, number, number];
+  leftLowerLeg: [number, number, number];
+  leftFoot?: [number, number, number];
+  rightUpperLeg: [number, number, number];
+  rightLowerLeg: [number, number, number];
+  rightFoot?: [number, number, number];
+  bodyOffsetY: number;
+}
+
+// Complete, Explicit, Anatomically Balanced Bone Targets for all 12 Poses
+const VRM_POSES: Record<string, BonePoseConfig> = {
+  // 1. Forehead Salute (Sevimli Alın Selamı)
   'pose-forehead-salute': {
     head: [0.06, -0.1, 0.14],
     chest: [0.02, -0.05, 0],
     hips: [0, 0.04, -0.02],
     leftUpperArm: [0.12, 0, -1.25],
     leftLowerArm: [0, 0.2, 0],
-    rightUpperArm: [-1.2, -0.4, 0.6],
+    leftHand: [0, 0, 0],
+    rightUpperArm: [-1.2, -0.35, 0.6],
     rightLowerArm: [0, -1.9, 0],
+    rightHand: [0.2, 0.2, 0],
     leftUpperLeg: [0.04, 0.08, -0.06],
     leftLowerLeg: [0.05, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.04, -0.08, 0.06],
     rightLowerLeg: [0.05, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -50,12 +59,16 @@ const VRM_POSES: Record<
     hips: [0, 0, 0],
     leftUpperArm: [0.1, 0, -1.25],
     leftLowerArm: [0, 0.2, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [-0.8, -0.3, 0.7],
     rightLowerArm: [0, -1.8, 0],
+    rightHand: [0.2, 0.2, 0],
     leftUpperLeg: [0.04, 0.08, -0.06],
     leftLowerLeg: [0.05, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.04, -0.08, 0.06],
     rightLowerLeg: [0.05, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -66,12 +79,16 @@ const VRM_POSES: Record<
     hips: [0, 0.02, 0],
     leftUpperArm: [0.1, 0, -1.25],
     leftLowerArm: [0, 0.3, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [0.1, 0, 1.25],
     rightLowerArm: [0, -0.3, 0],
+    rightHand: [0, 0, 0],
     leftUpperLeg: [0.02, 0.12, -0.04],
     leftLowerLeg: [0.05, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [0.02, -0.12, 0.04],
     rightLowerLeg: [0.05, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -82,12 +99,16 @@ const VRM_POSES: Record<
     hips: [-0.02, 0.12, 0.08],
     leftUpperArm: [0.2, 0.4, -0.7],
     leftLowerArm: [0, 1.6, 0],
+    leftHand: [-0.2, 0, 0],
     rightUpperArm: [0.1, 0, 1.25],
     rightLowerArm: [0, -0.1, 0],
+    rightHand: [0, 0, 0],
     leftUpperLeg: [0.06, -0.08, 0.08],
     leftLowerLeg: [0.08, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.04, 0.08, -0.06],
     rightLowerLeg: [0.04, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -98,12 +119,16 @@ const VRM_POSES: Record<
     hips: [0, -0.04, -0.02],
     leftUpperArm: [0.1, 0, -1.25],
     leftLowerArm: [0, 0.2, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [-1.4, -0.2, 0.3],
     rightLowerArm: [0, -0.8, 0],
+    rightHand: [0.3, 0, 0],
     leftUpperLeg: [0.02, 0.06, -0.05],
     leftLowerLeg: [0.05, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.02, -0.06, 0.05],
     rightLowerLeg: [0.05, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -114,12 +139,16 @@ const VRM_POSES: Record<
     hips: [-0.04, 0, 0],
     leftUpperArm: [0.4, 0, -0.3],
     leftLowerArm: [0, 0.5, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [0.4, 0, 0.3],
     rightLowerArm: [0, -0.5, 0],
+    rightHand: [0, 0, 0],
     leftUpperLeg: [0.05, 0.18, -0.05],
     leftLowerLeg: [0.08, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [0.05, -0.18, 0.05],
     rightLowerLeg: [0.08, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -130,12 +159,16 @@ const VRM_POSES: Record<
     hips: [0, 0.04, -0.02],
     leftUpperArm: [0.12, 0, -1.25],
     leftLowerArm: [0, 0.2, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [-0.9, -0.3, 0.7],
     rightLowerArm: [0, -1.75, 0],
+    rightHand: [0.15, 0.2, 0],
     leftUpperLeg: [0.04, 0.08, -0.06],
     leftLowerLeg: [0.05, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.04, -0.08, 0.06],
     rightLowerLeg: [0.05, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -146,28 +179,36 @@ const VRM_POSES: Record<
     hips: [-0.04, -0.06, -0.02],
     leftUpperArm: [0.3, 0.2, -0.6],
     leftLowerArm: [0, 1.3, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [-1.6, -0.3, 0.4],
     rightLowerArm: [0, -0.3, 0],
+    rightHand: [0.2, 0, 0],
     leftUpperLeg: [-0.05, 0.08, -0.06],
     leftLowerLeg: [0.08, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [0.06, -0.1, 0.08],
     rightLowerLeg: [0.08, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
-  // 9. Cute Kneeling / Sitting (🪑) - Natural Knee Flexion & lowered hips
+  // 9. Cute Kneeling / Sitting (🪑)
   'pose-sitting': {
     head: [0.04, 0.04, 0.06],
     chest: [0.04, 0, 0],
     hips: [0, 0, 0],
     leftUpperLeg: [1.4, 0.08, -0.05],
     leftLowerLeg: [1.85, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [1.4, -0.08, 0.05],
     rightLowerLeg: [1.85, 0, 0],
+    rightFoot: [0, 0, 0],
     leftUpperArm: [0.2, 0.2, -1.0],
     leftLowerArm: [0, 0.8, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [0.2, -0.2, 1.0],
     rightLowerArm: [0, -0.8, 0],
+    rightHand: [0, 0, 0],
     bodyOffsetY: -0.42,
   },
 
@@ -178,12 +219,16 @@ const VRM_POSES: Record<
     hips: [0, 0.4, 0],
     leftUpperArm: [0.15, 0, -1.15],
     leftLowerArm: [0, 0.2, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [0.15, 0, 1.15],
     rightLowerArm: [0, -0.2, 0],
+    rightHand: [0, 0, 0],
     leftUpperLeg: [-0.04, 0.15, -0.05],
     leftLowerLeg: [0.06, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [0.04, -0.15, 0.05],
     rightLowerLeg: [0.06, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -194,12 +239,16 @@ const VRM_POSES: Record<
     hips: [-0.04, 0.06, 0.04],
     leftUpperArm: [0.55, 0.35, -0.6],
     leftLowerArm: [0, 1.6, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [0.55, -0.35, 0.6],
     rightLowerArm: [0, -1.6, 0],
+    rightHand: [0, 0, 0],
     leftUpperLeg: [0.05, -0.08, 0.06],
     leftLowerLeg: [0.06, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.05, 0.08, -0.06],
     rightLowerLeg: [0.06, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 
@@ -210,12 +259,16 @@ const VRM_POSES: Record<
     hips: [0, -0.08, 0.04],
     leftUpperArm: [0.25, 0, -1.15],
     leftLowerArm: [0, 0.3, 0],
+    leftHand: [0, 0, 0],
     rightUpperArm: [-0.3, 0, 1.15],
     rightLowerArm: [0, -0.35, 0],
+    rightHand: [0, 0, 0],
     leftUpperLeg: [0.25, 0.06, -0.04],
     leftLowerLeg: [0.08, 0, 0],
+    leftFoot: [0, 0, 0],
     rightUpperLeg: [-0.2, -0.06, 0.04],
     rightLowerLeg: [0.08, 0, 0],
+    rightFoot: [0, 0, 0],
     bodyOffsetY: 0,
   },
 };
@@ -253,7 +306,7 @@ export function VRMCharacter() {
   const neckAttachmentRef = useRef<THREE.Group>(null);
   const hipsAttachmentRef = useRef<THREE.Group>(null);
 
-  // Load VRM Model
+  // Load VRM Model with cleanup
   useEffect(() => {
     let isCancelled = false;
     const loader = new GLTFLoader();
@@ -275,7 +328,7 @@ export function VRMCharacter() {
             loadedVrm.scene.position.set(0, -0.85, 0);
 
             if (process.env.NODE_ENV === 'development') {
-              console.log('[Kawaii 3D Debug] VRM Model loaded successfully:', loadedVrm);
+              console.log('[Kawaii 3D Debug] VRM Model initialized successfully');
             }
 
             setVrm(loadedVrm);
@@ -331,7 +384,7 @@ export function VRMCharacter() {
           const matName = (mat.name || '').toLowerCase();
           const meshName = (mesh.name || '').toLowerCase();
 
-          // Hair Material (Hair front, hair back)
+          // Hair Material
           if (matName.includes('hair') || meshName.includes('hair')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(hairCol);
@@ -395,10 +448,11 @@ export function VRMCharacter() {
     applyMaterials();
   }, [applyMaterials]);
 
-  // Real-time Smooth Bone Animation, Head Tracking & Spring Physics
+  // Central Animation & Bone Pose Controller with Smooth Transitions
   useFrame(({ clock }, delta) => {
     if (!vrm) return;
 
+    // Update spring bones for dynamic hair and cloth physics
     vrm.update(delta);
 
     const t = clock.getElapsedTime() * animationSpeed;
@@ -430,44 +484,61 @@ export function VRMCharacter() {
       vrm.expressionManager.update();
     }
 
+    // Controlled Idle Animation Layers
     const idleHead = idleAnimation ? Math.sin(t * 1.5) * 0.02 : 0;
     const idleHip = idleAnimation ? Math.cos(t * 1.5) * 0.015 : 0;
-    const lerpFactor = 1 - Math.exp(-8 * delta);
+    const idleBreathe = idleAnimation ? Math.sin(t * 2.2) * 0.012 : 0;
 
-    // Root Position Offset (For sitting etc.)
-    if (poseData.bodyOffsetY !== undefined) {
-      const targetY = -0.85 + poseData.bodyOffsetY;
-      vrm.scene.position.y = THREE.MathUtils.lerp(vrm.scene.position.y, targetY, lerpFactor);
-    }
+    // Smooth Pose Transition Lerp Factor
+    const lerpFactor = 1 - Math.exp(-9 * delta);
 
-    // Apply Smooth Lerped Humanoid Bone Rotations
-    const applyBone = (boneName: VRMHumanBoneName, rot?: [number, number, number], extraOffset?: [number, number, number]) => {
+    // Root Position Offset (For ground stability and sitting)
+    const targetY = -0.85 + (poseData.bodyOffsetY ?? 0);
+    vrm.scene.position.y = THREE.MathUtils.lerp(vrm.scene.position.y, targetY, lerpFactor);
+
+    // Helper to smoothly lerp bone rotations with 0 residual error
+    const applyBone = (
+      boneName: VRMHumanBoneName,
+      rot?: [number, number, number],
+      extraOffset?: [number, number, number]
+    ) => {
       const node = humanoid.getNormalizedBoneNode(boneName);
-      if (!node || !rot) return;
-      const ox = extraOffset ? extraOffset[0] : 0;
-      const oy = extraOffset ? extraOffset[1] : 0;
-      const oz = extraOffset ? extraOffset[2] : 0;
+      if (!node) return;
 
-      node.rotation.x = THREE.MathUtils.lerp(node.rotation.x, rot[0] + ox, lerpFactor);
-      node.rotation.y = THREE.MathUtils.lerp(node.rotation.y, rot[1] + oy, lerpFactor);
-      node.rotation.z = THREE.MathUtils.lerp(node.rotation.z, rot[2] + oz, lerpFactor);
+      const targetX = (rot ? rot[0] : 0) + (extraOffset ? extraOffset[0] : 0);
+      const targetY = (rot ? rot[1] : 0) + (extraOffset ? extraOffset[1] : 0);
+      const targetZ = (rot ? rot[2] : 0) + (extraOffset ? extraOffset[2] : 0);
+
+      node.rotation.x = THREE.MathUtils.lerp(node.rotation.x, targetX, lerpFactor);
+      node.rotation.y = THREE.MathUtils.lerp(node.rotation.y, targetY, lerpFactor);
+      node.rotation.z = THREE.MathUtils.lerp(node.rotation.z, targetZ, lerpFactor);
     };
 
+    // Upper Body
     applyBone(VRMHumanBoneName.Head, poseData.head, [0, idleHead, idleHead * 0.5]);
-    applyBone(VRMHumanBoneName.Chest, poseData.chest);
+    applyBone(VRMHumanBoneName.Chest, poseData.chest, [idleBreathe, 0, 0]);
     applyBone(VRMHumanBoneName.Hips, poseData.hips, [0, idleHip, 0]);
 
+    // Left Arm & Hand
     applyBone(VRMHumanBoneName.LeftUpperArm, poseData.leftUpperArm);
     applyBone(VRMHumanBoneName.LeftLowerArm, poseData.leftLowerArm);
+    applyBone(VRMHumanBoneName.LeftHand, poseData.leftHand);
+
+    // Right Arm & Hand
     applyBone(VRMHumanBoneName.RightUpperArm, poseData.rightUpperArm);
     applyBone(VRMHumanBoneName.RightLowerArm, poseData.rightLowerArm);
+    applyBone(VRMHumanBoneName.RightHand, poseData.rightHand);
 
+    // Lower Body
     applyBone(VRMHumanBoneName.LeftUpperLeg, poseData.leftUpperLeg);
     applyBone(VRMHumanBoneName.LeftLowerLeg, poseData.leftLowerLeg);
+    applyBone(VRMHumanBoneName.LeftFoot, poseData.leftFoot);
+
     applyBone(VRMHumanBoneName.RightUpperLeg, poseData.rightUpperLeg);
     applyBone(VRMHumanBoneName.RightLowerLeg, poseData.rightLowerLeg);
+    applyBone(VRMHumanBoneName.RightFoot, poseData.rightFoot);
 
-    // Sync Attachments to VRM Bone world positions & orientations
+    // Synchronize Attachment Anchors with VRM Bones in real-time
     const headNode = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
     if (headNode && headAttachmentRef.current) {
       headNode.getWorldPosition(headAttachmentRef.current.position);
@@ -509,7 +580,7 @@ export function VRMCharacter() {
               itemColors={itemColors}
             />
 
-            {/* Face Accessory (Glasses) */}
+            {/* Face Accessory (Heart Glasses) */}
             <AccessoriesRenderer
               category="accessory"
               itemId={equipped.accessory}

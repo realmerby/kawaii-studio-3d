@@ -15,20 +15,12 @@ interface AccessoriesRendererProps {
 export function AccessoriesRenderer({ category, itemId, itemColors = {} }: AccessoriesRendererProps) {
   const item = getItemById(itemId);
   const haloRef = useRef<THREE.Group>(null);
-  const heartBagRef = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-
-    // Floating animation for angel halo
     if (haloRef.current) {
-      haloRef.current.position.y = 0.58 + Math.sin(t * 3) * 0.02;
-      haloRef.current.rotation.y = t * 0.5;
-    }
-
-    // Subtle bag sway
-    if (heartBagRef.current) {
-      heartBagRef.current.rotation.z = -0.1 + Math.sin(t * 2) * 0.03;
+      haloRef.current.position.y = 0.28 + Math.sin(t * 3) * 0.015;
+      haloRef.current.rotation.y = t * 0.6;
     }
   });
 
@@ -38,116 +30,101 @@ export function AccessoriesRenderer({ category, itemId, itemColors = {} }: Acces
   const meshType = item.meshType;
 
   return (
-    <group>
+    <group scale={[0.55, 0.55, 0.55]}>
       {/* ============================================================ */}
-      {/* HEAD ACCESSORIES                                             */}
+      {/* 1. HEAD ACCESSORIES (Positioned for VRoid Head Bone)         */}
       {/* ============================================================ */}
       {category === 'headAccessory' && (
-        <group>
-          {/* 1. Ribbon Neko Kitty Ears */}
+        <group position={[0, 0.16, 0]}>
+          {/* Neko Kitty Ears */}
           {meshType === 'kitty_ears' && (
-            <group position={[0, 0.38, 0.05]}>
+            <group position={[0, 0.05, 0]}>
               {/* Left Ear */}
-              <group position={[-0.24, 0, 0]} rotation={[0.1, 0, -0.35]}>
+              <group position={[-0.14, 0, 0]} rotation={[0.1, 0, -0.3]}>
                 <mesh position={[0, 0, 0]}>
-                  <coneGeometry args={[0.08, 0.16, 4]} />
+                  <coneGeometry args={[0.06, 0.12, 4]} />
                   <meshStandardMaterial color={color} roughness={0.4} />
                 </mesh>
-                {/* Inner Pink Ear */}
-                <mesh position={[0, -0.01, 0.02]}>
-                  <coneGeometry args={[0.05, 0.11, 4]} />
+                <mesh position={[0, -0.01, 0.015]}>
+                  <coneGeometry args={[0.04, 0.09, 4]} />
                   <meshStandardMaterial color="#FF69B4" roughness={0.3} />
                 </mesh>
-                {/* Gold Bell & Bow */}
-                <mesh position={[0.02, -0.06, 0.05]}>
-                  <sphereGeometry args={[0.02, 12, 12]} />
-                  <meshStandardMaterial color="#FBBF24" metalness={0.8} roughness={0.2} />
+                <mesh position={[0.015, -0.04, 0.04]}>
+                  <sphereGeometry args={[0.015, 10, 10]} />
+                  <meshStandardMaterial color="#FBBF24" metalness={0.8} />
                 </mesh>
               </group>
 
               {/* Right Ear */}
-              <group position={[0.24, 0, 0]} rotation={[0.1, 0, 0.35]}>
+              <group position={[0.14, 0, 0]} rotation={[0.1, 0, 0.3]}>
                 <mesh position={[0, 0, 0]}>
-                  <coneGeometry args={[0.08, 0.16, 4]} />
+                  <coneGeometry args={[0.06, 0.12, 4]} />
                   <meshStandardMaterial color={color} roughness={0.4} />
                 </mesh>
-                {/* Inner Pink Ear */}
-                <mesh position={[0, -0.01, 0.02]}>
-                  <coneGeometry args={[0.05, 0.11, 4]} />
+                <mesh position={[0, -0.01, 0.015]}>
+                  <coneGeometry args={[0.04, 0.09, 4]} />
                   <meshStandardMaterial color="#FF69B4" roughness={0.3} />
                 </mesh>
-                {/* Gold Bell & Bow */}
-                <mesh position={[-0.02, -0.06, 0.05]}>
-                  <sphereGeometry args={[0.02, 12, 12]} />
-                  <meshStandardMaterial color="#FBBF24" metalness={0.8} roughness={0.2} />
+                <mesh position={[-0.015, -0.04, 0.04]}>
+                  <sphereGeometry args={[0.015, 10, 10]} />
+                  <meshStandardMaterial color="#FBBF24" metalness={0.8} />
                 </mesh>
               </group>
             </group>
           )}
 
-          {/* 2. Oversized Silk Hair Bow */}
+          {/* Big Satin Silk Bow on Crown */}
           {meshType === 'big_bow' && (
-            <group position={[0, 0.42, 0.05]} rotation={[-0.2, 0, 0]}>
-              {/* Center Knot */}
+            <group position={[0, 0.08, -0.04]} rotation={[-0.2, 0, 0]}>
               <mesh position={[0, 0, 0]}>
-                <sphereGeometry args={[0.045, 12, 12]} />
+                <sphereGeometry args={[0.035, 12, 12]} />
                 <meshStandardMaterial color={color} roughness={0.3} />
               </mesh>
-              {/* Left Wing */}
-              <mesh position={[-0.14, 0.04, 0]} rotation={[0, 0, 0.4]}>
-                <boxGeometry args={[0.22, 0.14, 0.05]} />
+              <mesh position={[-0.09, 0.03, 0]} rotation={[0, 0, 0.35]}>
+                <boxGeometry args={[0.14, 0.09, 0.03]} />
                 <meshStandardMaterial color={color} roughness={0.3} />
               </mesh>
-              {/* Right Wing */}
-              <mesh position={[0.14, 0.04, 0]} rotation={[0, 0, -0.4]}>
-                <boxGeometry args={[0.22, 0.14, 0.05]} />
+              <mesh position={[0.09, 0.03, 0]} rotation={[0, 0, -0.35]}>
+                <boxGeometry args={[0.14, 0.09, 0.03]} />
                 <meshStandardMaterial color={color} roughness={0.3} />
               </mesh>
-              {/* Ribbon Tails */}
-              <mesh position={[-0.08, -0.12, 0.02]} rotation={[0, 0, 0.3]}>
-                <boxGeometry args={[0.06, 0.18, 0.02]} />
+              <mesh position={[-0.05, -0.08, 0.01]} rotation={[0, 0, 0.25]}>
+                <boxGeometry args={[0.04, 0.12, 0.015]} />
                 <meshStandardMaterial color={color} roughness={0.3} />
               </mesh>
-              <mesh position={[0.08, -0.12, 0.02]} rotation={[0, 0, -0.3]}>
-                <boxGeometry args={[0.06, 0.18, 0.02]} />
+              <mesh position={[0.05, -0.08, 0.01]} rotation={[0, 0, -0.25]}>
+                <boxGeometry args={[0.04, 0.12, 0.015]} />
                 <meshStandardMaterial color={color} roughness={0.3} />
               </mesh>
             </group>
           )}
 
-          {/* 3. Luminous Angel Halo */}
+          {/* Glowing Angel Halo */}
           {meshType === 'angel_halo' && (
-            <group ref={haloRef} position={[0, 0.58, 0]} rotation={[0.2, 0, 0]}>
-              <mesh position={[0, 0, 0]}>
-                <torusGeometry args={[0.25, 0.025, 16, 32]} />
+            <group ref={haloRef} position={[0, 0.28, 0]} rotation={[0.2, 0, 0]}>
+              <mesh>
+                <torusGeometry args={[0.18, 0.018, 16, 32]} />
                 <meshStandardMaterial
                   color={color}
                   emissive={color}
-                  emissiveIntensity={0.6}
+                  emissiveIntensity={0.8}
                   metalness={0.7}
-                  roughness={0.2}
+                  roughness={0.1}
                 />
               </mesh>
             </group>
           )}
 
-          {/* 4. Pastel Heart Wool Beret */}
+          {/* Sweet Wool Beret */}
           {meshType === 'sweet_beret' && (
-            <group position={[0.06, 0.38, 0.02]} rotation={[-0.2, 0.15, -0.35]}>
-              {/* Beret Body */}
-              <mesh position={[0, 0, 0]}>
-                <cylinderGeometry args={[0.34, 0.28, 0.14, 24]} />
-                <meshStandardMaterial color={color} roughness={0.7} />
+            <group position={[0.04, 0.06, 0]} rotation={[-0.2, 0.1, -0.3]}>
+              <mesh>
+                <cylinderGeometry args={[0.22, 0.18, 0.09, 20]} />
+                <meshStandardMaterial color={color} roughness={0.8} />
               </mesh>
-              {/* Center Stem */}
-              <mesh position={[0, 0.1, 0]}>
-                <cylinderGeometry args={[0.015, 0.015, 0.06, 8]} />
-                <meshStandardMaterial color="#18181B" roughness={0.5} />
-              </mesh>
-              {/* Gold Heart Pin on side */}
-              <mesh position={[0.22, 0.02, 0.14]} rotation={[0, 0.5, 0]}>
-                <boxGeometry args={[0.06, 0.06, 0.02]} />
-                <meshStandardMaterial color="#FBBF24" metalness={0.8} roughness={0.2} />
+              <mesh position={[0, 0.06, 0]}>
+                <cylinderGeometry args={[0.01, 0.01, 0.04, 6]} />
+                <meshStandardMaterial color="#18181B" />
               </mesh>
             </group>
           )}
@@ -155,71 +132,48 @@ export function AccessoriesRenderer({ category, itemId, itemColors = {} }: Acces
       )}
 
       {/* ============================================================ */}
-      {/* ACCESSORIES (Necklaces, Glasses, Arm Warmers)                */}
+      {/* 2. ACCESSORIES (Glasses / Choker)                            */}
       {/* ============================================================ */}
       {category === 'accessory' && (
         <group>
-          {/* 1. Heart Bell Ribbon Choker */}
+          {/* Heart Bell Ribbon Choker on Neck */}
           {meshType === 'ribbon_choker' && (
-            <group position={[0, 0.28, 0]}>
-              {/* Neck Ribbon */}
-              <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[0.135, 0.018, 8, 20]} />
+            <group position={[0, 0, 0]}>
+              <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.09, 0.012, 8, 20]} />
                 <meshStandardMaterial color={color} roughness={0.3} />
               </mesh>
-              {/* Gold Heart Bell Pendant */}
-              <mesh position={[0, -0.04, 0.14]} rotation={[0, 0, Math.PI / 4]}>
-                <boxGeometry args={[0.04, 0.04, 0.02]} />
+              <mesh position={[0, -0.03, 0.09]} rotation={[0, 0, Math.PI / 4]}>
+                <boxGeometry args={[0.025, 0.025, 0.015]} />
                 <meshStandardMaterial color="#FBBF24" metalness={0.9} roughness={0.1} />
               </mesh>
             </group>
           )}
 
-          {/* 2. Fluffy Gyaru Arm Warmers */}
-          {meshType === 'arm_warmers' && (
-            <group position={[0, 0, 0]}>
-              {/* Left Arm Warmer */}
-              <mesh position={[-0.38, -0.15, 0]}>
-                <cylinderGeometry args={[0.08, 0.09, 0.24, 16]} />
-                <meshStandardMaterial color={color} roughness={0.9} />
-              </mesh>
-              {/* Right Arm Warmer */}
-              <mesh position={[0.38, -0.15, 0]}>
-                <cylinderGeometry args={[0.08, 0.09, 0.24, 16]} />
-                <meshStandardMaterial color={color} roughness={0.9} />
-              </mesh>
-            </group>
-          )}
-
-          {/* 3. Kawaii Tinted Heart Glasses */}
+          {/* Heart Tinted Glasses on Face */}
           {meshType === 'heart_glasses' && (
-            <group position={[0, 0.05, 0.38]} rotation={[-0.05, 0, 0]}>
-              {/* Left Heart Frame */}
-              <mesh position={[-0.12, 0, 0]}>
-                <torusGeometry args={[0.065, 0.009, 8, 16]} />
-                <meshStandardMaterial color="#FF1493" roughness={0.2} metalness={0.3} />
+            <group position={[0, 0.02, 0.14]} rotation={[-0.04, 0, 0]}>
+              <mesh position={[-0.07, 0, 0]}>
+                <torusGeometry args={[0.045, 0.007, 8, 16]} />
+                <meshStandardMaterial color="#FF1493" metalness={0.4} />
               </mesh>
-              {/* Left Translucent Lens */}
-              <mesh position={[-0.12, 0, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshStandardMaterial color={color} transparent opacity={0.5} roughness={0.1} />
+              <mesh position={[-0.07, 0, 0]}>
+                <circleGeometry args={[0.04, 16]} />
+                <meshStandardMaterial color={color} transparent opacity={0.4} />
               </mesh>
 
-              {/* Right Heart Frame */}
-              <mesh position={[0.12, 0, 0]}>
-                <torusGeometry args={[0.065, 0.009, 8, 16]} />
-                <meshStandardMaterial color="#FF1493" roughness={0.2} metalness={0.3} />
+              <mesh position={[0.07, 0, 0]}>
+                <torusGeometry args={[0.045, 0.007, 8, 16]} />
+                <meshStandardMaterial color="#FF1493" metalness={0.4} />
               </mesh>
-              {/* Right Translucent Lens */}
-              <mesh position={[0.12, 0, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshStandardMaterial color={color} transparent opacity={0.5} roughness={0.1} />
+              <mesh position={[0.07, 0, 0]}>
+                <circleGeometry args={[0.04, 16]} />
+                <meshStandardMaterial color={color} transparent opacity={0.4} />
               </mesh>
 
-              {/* Center Bridge */}
-              <mesh position={[0, 0.01, 0]}>
-                <boxGeometry args={[0.08, 0.01, 0.01]} />
-                <meshStandardMaterial color="#FF1493" roughness={0.2} metalness={0.3} />
+              <mesh position={[0, 0.005, 0]}>
+                <boxGeometry args={[0.05, 0.008, 0.008]} />
+                <meshStandardMaterial color="#FF1493" metalness={0.4} />
               </mesh>
             </group>
           )}
@@ -227,82 +181,56 @@ export function AccessoriesRenderer({ category, itemId, itemColors = {} }: Acces
       )}
 
       {/* ============================================================ */}
-      {/* BAGS                                                         */}
+      {/* 3. BAGS                                                      */}
       {/* ============================================================ */}
       {category === 'bag' && (
         <group>
-          {/* 1. Quilted Heart Crossbody Bag */}
+          {/* Quilted Crossbody Heart Bag */}
           {meshType === 'heart_crossbody' && (
-            <group ref={heartBagRef} position={[-0.28, -0.15, 0.12]}>
-              {/* Heart Bag Body */}
-              <mesh position={[0, 0, 0]} rotation={[0, 0.3, 0]}>
-                <boxGeometry args={[0.18, 0.18, 0.08]} />
-                <meshStandardMaterial color={color} roughness={0.2} metalness={0.1} />
+            <group position={[-0.18, -0.05, 0.08]} rotation={[0, 0.3, 0]}>
+              <mesh>
+                <boxGeometry args={[0.13, 0.13, 0.06]} />
+                <meshStandardMaterial color={color} roughness={0.3} metalness={0.1} />
               </mesh>
-              {/* Gold Clasp */}
-              <mesh position={[0, 0.04, 0.05]} rotation={[0, 0.3, 0]}>
-                <sphereGeometry args={[0.02, 12, 12]} />
-                <meshStandardMaterial color="#FBBF24" metalness={0.9} roughness={0.1} />
-              </mesh>
-              {/* Gold Chain Strap running over shoulder */}
-              <mesh position={[0.12, 0.28, -0.05]} rotation={[0.4, 0.2, 0.7]}>
-                <cylinderGeometry args={[0.007, 0.007, 0.65, 8]} />
-                <meshStandardMaterial color="#FBBF24" metalness={0.8} roughness={0.2} />
+              <mesh position={[0, 0.03, 0.035]}>
+                <sphereGeometry args={[0.015, 10, 10]} />
+                <meshStandardMaterial color="#FBBF24" metalness={0.9} />
               </mesh>
             </group>
           )}
 
-          {/* 2. Kawaii Teddy Bear Backpack */}
+          {/* Teddy Backpack on Back */}
           {meshType === 'teddy_backpack' && (
-            <group position={[0, 0.05, -0.26]}>
-              {/* Teddy Bear Body */}
+            <group position={[0, 0.05, -0.16]}>
               <mesh position={[0, 0, 0]}>
-                <sphereGeometry args={[0.16, 16, 16]} />
-                <meshStandardMaterial color={color} roughness={0.9} />
-              </mesh>
-              {/* Teddy Bear Head */}
-              <mesh position={[0, 0.16, 0.04]}>
                 <sphereGeometry args={[0.12, 16, 16]} />
                 <meshStandardMaterial color={color} roughness={0.9} />
               </mesh>
-              {/* Teddy Ears */}
-              <mesh position={[-0.09, 0.25, 0.04]}>
-                <sphereGeometry args={[0.045, 12, 12]} />
+              <mesh position={[0, 0.12, 0.03]}>
+                <sphereGeometry args={[0.09, 14, 14]} />
                 <meshStandardMaterial color={color} roughness={0.9} />
               </mesh>
-              <mesh position={[0.09, 0.25, 0.04]}>
-                <sphereGeometry args={[0.045, 12, 12]} />
+              <mesh position={[-0.07, 0.18, 0.03]}>
+                <sphereGeometry args={[0.035, 10, 10]} />
                 <meshStandardMaterial color={color} roughness={0.9} />
               </mesh>
-              {/* Snout & Nose */}
-              <mesh position={[0, 0.14, 0.14]}>
-                <sphereGeometry args={[0.04, 12, 12]} />
-                <meshStandardMaterial color="#FEF3C7" roughness={0.8} />
-              </mesh>
-              <mesh position={[0, 0.16, 0.17]}>
-                <sphereGeometry args={[0.015, 8, 8]} />
-                <meshBasicMaterial color="#18181B" />
+              <mesh position={[0.07, 0.18, 0.03]}>
+                <sphereGeometry args={[0.035, 10, 10]} />
+                <meshStandardMaterial color={color} roughness={0.9} />
               </mesh>
             </group>
           )}
 
-          {/* 3. Pastel Star Mini Tote */}
+          {/* Pastel Star Tote Bag */}
           {meshType === 'pastel_tote' && (
-            <group position={[0.34, -0.32, 0.08]}>
-              {/* Tote Body */}
-              <mesh position={[0, 0, 0]}>
-                <boxGeometry args={[0.16, 0.2, 0.07]} />
+            <group position={[0.22, -0.22, 0.06]}>
+              <mesh>
+                <boxGeometry args={[0.12, 0.16, 0.05]} />
                 <meshStandardMaterial color={color} roughness={0.4} />
               </mesh>
-              {/* Star Emblem */}
-              <mesh position={[0, 0, 0.04]}>
-                <boxGeometry args={[0.06, 0.06, 0.01]} />
-                <meshStandardMaterial color="#FDE047" emissive="#FDE047" emissiveIntensity={0.3} />
-              </mesh>
-              {/* Handle */}
-              <mesh position={[0, 0.14, 0]}>
-                <torusGeometry args={[0.06, 0.01, 8, 16, Math.PI]} />
-                <meshStandardMaterial color="#FFFFFF" roughness={0.3} />
+              <mesh position={[0, 0, 0.03]}>
+                <boxGeometry args={[0.045, 0.045, 0.01]} />
+                <meshStandardMaterial color="#FDE047" emissive="#FDE047" emissiveIntensity={0.4} />
               </mesh>
             </group>
           )}

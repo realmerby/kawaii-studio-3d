@@ -334,7 +334,7 @@ export function VRMCharacter() {
     };
   }, []);
 
-  // Central Character State -> 3D Material, Pattern & Theme Synchronization
+  // Central Character State -> 3D Material, Pattern & Hair Synchronization
   const applyMaterials = useCallback(() => {
     if (!vrm) return;
 
@@ -342,13 +342,21 @@ export function VRMCharacter() {
     const eyeCol = colors.eyeColor || '#9333EA';
     const skinCol = colors.skinTone || '#FFF8F5';
 
+    // True Hair Replacement Logic:
+    // If an external hair model is equipped (twintails, bobcut, himecut), completely hide the VRM model's built-in hair.
+    // If gyaruwaves or default is equipped, show the VRM model's built-in hair with dynamic colors.
+    const isExternalHair = equipped.hair !== 'hair-gyaruwaves' && equipped.hair !== null;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Hair Engine] Current: ${equipped.hair} | Mode: ${isExternalHair ? 'external' : 'base'} | Base VRM Hair: ${!isExternalHair}`);
+    }
+
     // Dress override & compatibility
     const isDressEquipped = !!equipped.dress;
     const dressItem = equipped.dress ? getItemById(equipped.dress) : undefined;
     const topItem = equipped.top ? getItemById(equipped.top) : undefined;
     const bottomItem = equipped.bottom ? getItemById(equipped.bottom) : undefined;
     const shoesItem = equipped.shoes ? getItemById(equipped.shoes) : undefined;
-    const socksItem = equipped.socks ? getItemById(equipped.socks) : undefined;
     const outerItem = equipped.outerwear ? getItemById(equipped.outerwear) : undefined;
 
     // Resolve active primary and secondary colors
@@ -386,19 +394,24 @@ export function VRMCharacter() {
     vrm.scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
+        const meshName = (mesh.name || '').toLowerCase();
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
+        // 1. BASE VRM HAIR MESH VISIBILITY & COLOR CONTROL
+        if (meshName === 'hair' || meshName.includes('hair')) {
+          mesh.visible = !isExternalHair;
+          if (mesh.visible) {
+            materials.forEach((mat) => {
+              if (mat && 'color' in mat && mat.color instanceof THREE.Color) {
+                mat.color.set(hairCol);
+              }
+            });
+          }
+        }
 
         materials.forEach((mat) => {
           if (!mat) return;
           const matName = (mat.name || '').toLowerCase();
-          const meshName = (mesh.name || '').toLowerCase();
-
-          // Hair Material
-          if (matName.includes('hair') || meshName.includes('hair')) {
-            if ('color' in mat && mat.color instanceof THREE.Color) {
-              mat.color.set(hairCol);
-            }
-          }
 
           // Eye & Iris Material
           if (matName.includes('eye') || matName.includes('iris') || meshName.includes('eye')) {
@@ -414,7 +427,7 @@ export function VRMCharacter() {
             }
           }
 
-          // Outerwear / Cardigan (if mesh has cardigan/jacket component)
+          // Outerwear / Cardigan
           if (matName.includes('cardigan') || matName.includes('jacket') || matName.includes('outer')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(outerCol);
@@ -586,14 +599,16 @@ export function VRMCharacter() {
         <>
           <primitive object={vrm.scene} />
 
-          {/* 1. Head Attachments (Hair + Head Accessories + Glasses + Earrings) */}
+          {/* 1. Head Attachments (HairRoot + Head Accessories + Glasses + Earrings) */}
           <group ref={headAttachmentRef}>
-            {/* 3D Hair Style Model */}
-            <HairRenderer
-              hairId={equipped.hair}
-              colors={colors}
-              itemColor={equipped.hair ? itemColors[equipped.hair] : undefined}
-            />
+            {/* Dedicated Single-Instance Hair Container */}
+            <group name="HairRoot">
+              <HairRenderer
+                hairId={equipped.hair}
+                colors={colors}
+                itemColor={equipped.hair ? itemColors[equipped.hair] : undefined}
+              />
+            </group>
 
             {/* Head Accessory (Bow, Ears, Halo, Beret) */}
             <AccessoriesRenderer

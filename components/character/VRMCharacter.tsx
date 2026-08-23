@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils, VRMHumanBoneName } from '@pixiv/three-vrm';
 import { useGameStore } from '@/lib/store';
+import { HairRenderer } from './HairRenderer';
 import { AccessoriesRenderer } from './AccessoriesRenderer';
 
 // Accurate VRM Humanoid Bone Transforms for each of the 12 Anime Poses
@@ -252,7 +253,7 @@ export function VRMCharacter() {
   const neckAttachmentRef = useRef<THREE.Group>(null);
   const hipsAttachmentRef = useRef<THREE.Group>(null);
 
-  // Load VRM Model with graceful error handling
+  // Load VRM Model
   useEffect(() => {
     let isCancelled = false;
     const loader = new GLTFLoader();
@@ -269,12 +270,12 @@ export function VRMCharacter() {
             VRMUtils.combineSkeletons(gltf.scene);
             VRMUtils.combineMorphs(loadedVrm);
 
-            // Face camera directly
+            // Face front directly
             loadedVrm.scene.rotation.y = 0;
             loadedVrm.scene.position.set(0, -0.85, 0);
 
             if (process.env.NODE_ENV === 'development') {
-              console.log('[Kawaii 3D Debug] VRM Model successfully initialized:', loadedVrm);
+              console.log('[Kawaii 3D Debug] VRM Model loaded successfully:', loadedVrm);
             }
 
             setVrm(loadedVrm);
@@ -320,18 +321,6 @@ export function VRMCharacter() {
 
     const shoesCol = (equipped.shoes && itemColors[equipped.shoes]) || shoesTheme;
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Kawaii 3D Debug] Syncing materials to 3D scene:', {
-        hair: hairCol,
-        eye: eyeCol,
-        skin: skinCol,
-        top: topCol,
-        bottom: bottomCol,
-        shoes: shoesCol,
-        isDress: isDressEquipped,
-      });
-    }
-
     vrm.scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
@@ -342,7 +331,7 @@ export function VRMCharacter() {
           const matName = (mat.name || '').toLowerCase();
           const meshName = (mesh.name || '').toLowerCase();
 
-          // Hair Material
+          // Hair Material (Hair front, hair back)
           if (matName.includes('hair') || meshName.includes('hair')) {
             if ('color' in mat && mat.color instanceof THREE.Color) {
               mat.color.set(hairCol);
@@ -478,7 +467,7 @@ export function VRMCharacter() {
     applyBone(VRMHumanBoneName.RightUpperLeg, poseData.rightUpperLeg);
     applyBone(VRMHumanBoneName.RightLowerLeg, poseData.rightLowerLeg);
 
-    // Sync Attachments to VRM Bone world positions
+    // Sync Attachments to VRM Bone world positions & orientations
     const headNode = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Head);
     if (headNode && headAttachmentRef.current) {
       headNode.getWorldPosition(headAttachmentRef.current.position);
@@ -504,16 +493,37 @@ export function VRMCharacter() {
         <>
           <primitive object={vrm.scene} />
 
-          {/* Head Accessories Tracked to VRM Head Bone */}
+          {/* 1. Head Attachments (Hair + Head Accessories + Glasses + Earrings) */}
           <group ref={headAttachmentRef}>
+            {/* 3D Hair Style Model */}
+            <HairRenderer
+              hairId={equipped.hair}
+              colors={colors}
+              itemColor={equipped.hair ? itemColors[equipped.hair] : undefined}
+            />
+
+            {/* Head Accessory (Bow, Ears, Halo, Beret) */}
             <AccessoriesRenderer
               category="headAccessory"
               itemId={equipped.headAccessory}
               itemColors={itemColors}
             />
+
+            {/* Face Accessory (Glasses) */}
+            <AccessoriesRenderer
+              category="accessory"
+              itemId={equipped.accessory}
+              itemColors={itemColors}
+            />
+
+            {/* Earrings */}
+            <AccessoriesRenderer
+              earringStyle={faceFeatures.earrings}
+              itemColors={itemColors}
+            />
           </group>
 
-          {/* Neck Accessories Tracked to VRM Neck Bone */}
+          {/* 2. Neck Attachments (Choker / Necklace) */}
           <group ref={neckAttachmentRef}>
             <AccessoriesRenderer
               category="accessory"
@@ -522,7 +532,7 @@ export function VRMCharacter() {
             />
           </group>
 
-          {/* Bag Accessories Tracked to VRM Hips Bone */}
+          {/* 3. Hip/Back Attachments (Bags / Backpack) */}
           <group ref={hipsAttachmentRef}>
             <AccessoriesRenderer
               category="bag"

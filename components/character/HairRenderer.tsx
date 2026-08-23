@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { CharacterColors } from '@/types/character';
@@ -16,186 +16,170 @@ export function HairRenderer({ hairId, colors, itemColor }: HairRendererProps) {
   const rightTwintailRef = useRef<THREE.Group>(null);
   const ahogeRef = useRef<THREE.Group>(null);
 
-  const mainColor = itemColor || colors.hairColor || '#FF80AB';
+  const mainColor = itemColor || colors.hairColor || '#FFA8CA';
   const highlightColor = colors.hairHighlightColor || '#FFFFFF';
 
+  // Hair physics / spring motion
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (leftTwintailRef.current && rightTwintailRef.current) {
-      leftTwintailRef.current.rotation.z = 0.2 + Math.sin(t * 2.2) * 0.06;
-      rightTwintailRef.current.rotation.z = -0.2 - Math.sin(t * 2.2) * 0.06;
+      leftTwintailRef.current.rotation.z = 0.2 + Math.sin(t * 2.2) * 0.05;
+      leftTwintailRef.current.rotation.x = Math.cos(t * 2.0) * 0.04;
+      rightTwintailRef.current.rotation.z = -0.2 - Math.sin(t * 2.2) * 0.05;
+      rightTwintailRef.current.rotation.x = Math.cos(t * 2.0) * 0.04;
     }
     if (ahogeRef.current) {
-      ahogeRef.current.rotation.z = Math.sin(t * 3) * 0.12;
+      ahogeRef.current.rotation.z = Math.sin(t * 3) * 0.1;
+      ahogeRef.current.rotation.x = Math.cos(t * 2.5) * 0.08;
     }
   });
 
   if (!hairId) return null;
 
   return (
-    <group position={[0, 0, 0]}>
+    <group scale={[0.52, 0.52, 0.52]} position={[0, 0.04, -0.02]}>
       {/* ============================================================ */}
-      {/* 1. TOP & BACK HAIR CAP (DOES NOT COVER FRONT FACE)           */}
+      {/* 1. TOP CROWN VOLUME & HIGHLIGHT                              */}
       {/* ============================================================ */}
-      {/* Back Hair Dome - Shifted backwards so face stays completely clear */}
-      <mesh position={[0, 0.06, -0.12]} scale={[1.04, 1.05, 0.95]}>
-        <sphereGeometry args={[0.39, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.72]} />
+      {/* Crown volume dome */}
+      <mesh position={[0, 0.16, -0.04]}>
+        <sphereGeometry args={[0.26, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
         <meshStandardMaterial color={mainColor} roughness={0.35} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Top Crown Volume */}
-      <mesh position={[0, 0.24, -0.04]}>
-        <sphereGeometry args={[0.34, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
-        <meshStandardMaterial color={mainColor} roughness={0.35} side={THREE.DoubleSide} />
+      {/* Hair Shine Highlight Band */}
+      <mesh position={[0, 0.22, 0.1]} rotation={[-0.4, 0, 0]}>
+        <torusGeometry args={[0.22, 0.014, 8, 24, Math.PI * 0.75]} />
+        <meshBasicMaterial color={highlightColor} transparent opacity={0.65} />
       </mesh>
 
-      {/* Hair Shine Highlight Band on Crown */}
-      <mesh position={[0, 0.28, 0.12]} rotation={[-0.45, 0, 0]}>
-        <torusGeometry args={[0.3, 0.018, 8, 24, Math.PI * 0.8]} />
-        <meshBasicMaterial color={highlightColor} transparent opacity={0.6} />
-      </mesh>
-
-      {/* Cute Ahoge (Springy hair strand on crown) */}
-      <group ref={ahogeRef} position={[0, 0.42, 0]} rotation={[0.2, 0, 0]}>
-        <mesh position={[0, 0.06, 0.04]} rotation={[0.5, 0, 0.2]}>
-          <coneGeometry args={[0.02, 0.14, 8]} />
+      {/* Cute Spring Ahoge on Crown */}
+      <group ref={ahogeRef} position={[0, 0.32, 0]} rotation={[0.2, 0, 0]}>
+        <mesh position={[0, 0.05, 0.03]} rotation={[0.4, 0, 0.2]}>
+          <coneGeometry args={[0.016, 0.12, 8]} />
           <meshStandardMaterial color={mainColor} roughness={0.35} />
         </mesh>
       </group>
 
       {/* ============================================================ */}
-      {/* 2. CUTE FRONT BANGS (Positioned high above eyes)             */}
-      {/* ============================================================ */}
-      <group position={[0, 0.25, 0.3]}>
-        {/* Center Bang */}
-        <mesh position={[0, -0.02, 0.04]} rotation={[0.35, 0, 0]}>
-          <coneGeometry args={[0.065, 0.14, 10]} />
-          <meshStandardMaterial color={mainColor} roughness={0.35} />
-        </mesh>
-        {/* Left Bang */}
-        <mesh position={[-0.08, -0.01, 0.03]} rotation={[0.3, 0, 0.2]}>
-          <coneGeometry args={[0.06, 0.13, 10]} />
-          <meshStandardMaterial color={mainColor} roughness={0.35} />
-        </mesh>
-        {/* Right Bang */}
-        <mesh position={[0.08, -0.01, 0.03]} rotation={[0.3, 0, -0.2]}>
-          <coneGeometry args={[0.06, 0.13, 10]} />
-          <meshStandardMaterial color={mainColor} roughness={0.35} />
-        </mesh>
-        {/* Far Left Side Framing Lock */}
-        <mesh position={[-0.24, -0.16, 0]} rotation={[0.2, 0.1, 0.15]}>
-          <coneGeometry args={[0.06, 0.32, 10]} />
-          <meshStandardMaterial color={mainColor} roughness={0.35} />
-        </mesh>
-        {/* Far Right Side Framing Lock */}
-        <mesh position={[0.24, -0.16, 0]} rotation={[0.2, -0.1, -0.15]}>
-          <coneGeometry args={[0.06, 0.32, 10]} />
-          <meshStandardMaterial color={mainColor} roughness={0.35} />
-        </mesh>
-      </group>
-
-      {/* ============================================================ */}
-      {/* 3. HAIRSTYLE VARIANTS                                        */}
+      {/* 2. SPECIFIC 3D HAIRSTYLE MESHES                              */}
       {/* ============================================================ */}
 
-      {/* TWINTAILS */}
+      {/* A. KAWAII TWINTAILS */}
       {hairId === 'hair-twintails' && (
         <group>
-          {/* Left Pigtail */}
-          <group ref={leftTwintailRef} position={[-0.35, 0.2, -0.08]}>
+          {/* Left Ponytail with Ribbon */}
+          <group ref={leftTwintailRef} position={[-0.24, 0.16, -0.06]}>
+            {/* Satin Pink Ribbon Tie */}
             <mesh position={[0, 0, 0]}>
-              <torusGeometry args={[0.045, 0.016, 8, 16]} />
+              <torusGeometry args={[0.035, 0.012, 8, 16]} />
               <meshStandardMaterial color="#FF1493" roughness={0.3} />
             </mesh>
-            <mesh position={[-0.06, -0.2, 0]} rotation={[0.1, 0, 0.3]}>
-              <coneGeometry args={[0.08, 0.42, 12]} />
+            <mesh position={[-0.03, 0.02, 0.01]} rotation={[0, 0, 0.3]}>
+              <boxGeometry args={[0.06, 0.03, 0.015]} />
+              <meshStandardMaterial color="#FF1493" roughness={0.3} />
+            </mesh>
+            {/* Main Long Ponytail Strand */}
+            <mesh position={[-0.05, -0.18, 0]} rotation={[0.1, 0, 0.25]}>
+              <coneGeometry args={[0.065, 0.38, 12]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
-            <mesh position={[-0.1, -0.46, 0.02]} rotation={[0.1, 0, 0.15]}>
-              <coneGeometry args={[0.06, 0.32, 12]} />
+            {/* Tapered Lower Tip */}
+            <mesh position={[-0.08, -0.38, 0.02]} rotation={[0.1, 0, 0.12]}>
+              <coneGeometry args={[0.045, 0.26, 12]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
           </group>
 
-          {/* Right Pigtail */}
-          <group ref={rightTwintailRef} position={[0.35, 0.2, -0.08]}>
+          {/* Right Ponytail with Ribbon */}
+          <group ref={rightTwintailRef} position={[0.24, 0.16, -0.06]}>
+            {/* Satin Pink Ribbon Tie */}
             <mesh position={[0, 0, 0]}>
-              <torusGeometry args={[0.045, 0.016, 8, 16]} />
+              <torusGeometry args={[0.035, 0.012, 8, 16]} />
               <meshStandardMaterial color="#FF1493" roughness={0.3} />
             </mesh>
-            <mesh position={[0.06, -0.2, 0]} rotation={[0.1, 0, -0.3]}>
-              <coneGeometry args={[0.08, 0.42, 12]} />
+            <mesh position={[0.03, 0.02, 0.01]} rotation={[0, 0, -0.3]}>
+              <boxGeometry args={[0.06, 0.03, 0.015]} />
+              <meshStandardMaterial color="#FF1493" roughness={0.3} />
+            </mesh>
+            {/* Main Long Ponytail Strand */}
+            <mesh position={[0.05, -0.18, 0]} rotation={[0.1, 0, -0.25]}>
+              <coneGeometry args={[0.065, 0.38, 12]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
-            <mesh position={[0.1, -0.46, 0.02]} rotation={[0.1, 0, -0.15]}>
-              <coneGeometry args={[0.06, 0.32, 12]} />
+            {/* Tapered Lower Tip */}
+            <mesh position={[0.08, -0.38, 0.02]} rotation={[0.1, 0, -0.12]}>
+              <coneGeometry args={[0.045, 0.26, 12]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
           </group>
         </group>
       )}
 
-      {/* GYARU WAVES */}
+      {/* B. GYARU LONG WAVES */}
       {hairId === 'hair-gyaruwaves' && (
         <group>
-          {/* Fluffy Back Waves */}
-          <group position={[0, -0.14, -0.2]}>
+          {/* Voluminous Back Waves */}
+          <group position={[0, -0.08, -0.14]}>
             <mesh position={[0, 0, 0]} rotation={[-0.1, 0, 0]}>
-              <cylinderGeometry args={[0.28, 0.36, 0.46, 18]} />
+              <cylinderGeometry args={[0.2, 0.28, 0.36, 18]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
-            <mesh position={[-0.14, -0.28, 0.04]} rotation={[0.2, 0, 0.25]}>
-              <coneGeometry args={[0.08, 0.34, 10]} />
+            <mesh position={[-0.1, -0.22, 0.03]} rotation={[0.2, 0, 0.2]}>
+              <coneGeometry args={[0.06, 0.28, 10]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
-            <mesh position={[0.14, -0.28, 0.04]} rotation={[0.2, 0, -0.25]}>
-              <coneGeometry args={[0.08, 0.34, 10]} />
+            <mesh position={[0.1, -0.22, 0.03]} rotation={[0.2, 0, -0.2]}>
+              <coneGeometry args={[0.06, 0.28, 10]} />
               <meshStandardMaterial color={mainColor} roughness={0.35} />
             </mesh>
           </group>
-          {/* Shoulder Tufts */}
-          <mesh position={[-0.3, -0.18, 0.02]} rotation={[0.2, 0.1, 0.3]}>
-            <coneGeometry args={[0.08, 0.38, 10]} />
+          {/* Flowing Front Locks */}
+          <mesh position={[-0.2, -0.12, 0.02]} rotation={[0.15, 0.1, 0.25]}>
+            <coneGeometry args={[0.055, 0.32, 10]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
-          <mesh position={[0.3, -0.18, 0.02]} rotation={[0.2, -0.1, -0.3]}>
-            <coneGeometry args={[0.08, 0.38, 10]} />
+          <mesh position={[0.2, -0.12, 0.02]} rotation={[0.15, -0.1, -0.25]}>
+            <coneGeometry args={[0.055, 0.32, 10]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
         </group>
       )}
 
-      {/* BOBCUT */}
+      {/* C. PASTEL BOB CUT */}
       {hairId === 'hair-bobcut' && (
-        <group position={[0, -0.06, -0.1]}>
-          <mesh position={[0, 0, 0]} rotation={[-0.1, 0, 0]}>
-            <cylinderGeometry args={[0.34, 0.38, 0.34, 20]} />
+        <group position={[0, -0.04, -0.08]}>
+          <mesh position={[0, 0, 0]} rotation={[-0.08, 0, 0]}>
+            <cylinderGeometry args={[0.24, 0.28, 0.26, 20]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
-          <mesh position={[-0.22, -0.18, 0.1]} rotation={[0, 0, 0.3]}>
-            <sphereGeometry args={[0.1, 14, 14]} />
+          {/* Curved Inward Ends */}
+          <mesh position={[-0.16, -0.14, 0.06]} rotation={[0, 0, 0.25]}>
+            <sphereGeometry args={[0.07, 12, 12]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
-          <mesh position={[0.22, -0.18, 0.1]} rotation={[0, 0, -0.3]}>
-            <sphereGeometry args={[0.1, 14, 14]} />
+          <mesh position={[0.16, -0.14, 0.06]} rotation={[0, 0, -0.25]}>
+            <sphereGeometry args={[0.07, 12, 12]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
         </group>
       )}
 
-      {/* HIMECUT */}
+      {/* D. PRINCESS HIME CUT */}
       {hairId === 'hair-himecut' && (
         <group>
-          <mesh position={[0, -0.24, -0.2]}>
-            <boxGeometry args={[0.54, 0.75, 0.12]} />
+          {/* Straight Flat Back Drape */}
+          <mesh position={[0, -0.18, -0.14]}>
+            <boxGeometry args={[0.38, 0.55, 0.08]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
-          <mesh position={[-0.24, -0.12, 0.12]}>
-            <boxGeometry args={[0.06, 0.3, 0.06]} />
+          {/* Characteristic Blunt Hime Sidelocks */}
+          <mesh position={[-0.18, -0.08, 0.08]}>
+            <boxGeometry args={[0.045, 0.22, 0.04]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
-          <mesh position={[0.24, -0.12, 0.12]}>
-            <boxGeometry args={[0.06, 0.3, 0.06]} />
+          <mesh position={[0.18, -0.08, 0.08]}>
+            <boxGeometry args={[0.045, 0.22, 0.04]} />
             <meshStandardMaterial color={mainColor} roughness={0.35} />
           </mesh>
         </group>

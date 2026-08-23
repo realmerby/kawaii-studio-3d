@@ -98,8 +98,8 @@ const DEFAULT_EQUIPPED: Record<ClothingCategory, string | null> = {
 };
 
 const DEFAULT_COLORS: CharacterColors = {
-  hairColor: '#18181B',
-  hairHighlightColor: '#FEF08A',
+  hairColor: '#FFA8CA',
+  hairHighlightColor: '#FFFFFF',
   eyeColor: '#9333EA',
   skinTone: '#FFF8F5',
   blushIntensity: 0.85,
